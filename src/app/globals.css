@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0a1628;
+  --brand-navy: #0a1628;
+  --brand-navy-light: #132743;
+  --brand-orange: #f97316;
+  --brand-orange-dark: #ea580c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-navy-light: var(--brand-navy-light);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-dark: var(--brand-orange-dark);
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-oswald), system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Public catalog storefront theme */
+.catalog-site {
+  --catalog-bg: #f4f1ec;
+  --catalog-surface: #ffffff;
+  --catalog-ink: #1a1f2e;
+  --catalog-muted: #6b7280;
+  --catalog-accent: #c2410c;
+  --catalog-accent-soft: #fff7ed;
+  --catalog-header: #111827;
+  --catalog-wa: #059669;
+  --catalog-promo: #f87171;
+  --catalog-hero-mid: #1f2937;
+  --catalog-hero-glow-a: rgba(194, 65, 12, 0.18);
+  --catalog-hero-glow-b: rgba(5, 150, 105, 0.12);
+  --catalog-hero-accent-line: #fbbf24;
+}
+
+.catalog-site[data-catalog-theme="ocean"] {
+  --catalog-bg: #eef4f8;
+  --catalog-ink: #0c1929;
+  --catalog-muted: #64748b;
+  --catalog-accent: #0284c7;
+  --catalog-accent-soft: #e0f2fe;
+  --catalog-header: #0c4a6e;
+  --catalog-wa: #059669;
+  --catalog-promo: #7dd3fc;
+  --catalog-hero-mid: #155e75;
+  --catalog-hero-glow-a: rgba(2, 132, 199, 0.22);
+  --catalog-hero-glow-b: rgba(14, 165, 233, 0.14);
+  --catalog-hero-accent-line: #38bdf8;
+}
+
+.catalog-site[data-catalog-theme="forest"] {
+  --catalog-bg: #f0f4f0;
+  --catalog-ink: #1a2e1a;
+  --catalog-muted: #6b7280;
+  --catalog-accent: #166534;
+  --catalog-accent-soft: #dcfce7;
+  --catalog-header: #14532d;
+  --catalog-wa: #059669;
+  --catalog-promo: #86efac;
+  --catalog-hero-mid: #166534;
+  --catalog-hero-glow-a: rgba(22, 101, 52, 0.2);
+  --catalog-hero-glow-b: rgba(5, 150, 105, 0.12);
+  --catalog-hero-accent-line: #4ade80;
+}
+
+.catalog-site[data-catalog-theme="rose"] {
+  --catalog-bg: #faf5f5;
+  --catalog-ink: #2d1f1f;
+  --catalog-muted: #78716c;
+  --catalog-accent: #be123c;
+  --catalog-accent-soft: #ffe4e6;
+  --catalog-header: #881337;
+  --catalog-wa: #059669;
+  --catalog-promo: #fda4af;
+  --catalog-hero-mid: #9f1239;
+  --catalog-hero-glow-a: rgba(190, 18, 60, 0.2);
+  --catalog-hero-glow-b: rgba(244, 63, 94, 0.12);
+  --catalog-hero-accent-line: #fb7185;
+}
+
+.catalog-site[data-catalog-theme="slate"] {
+  --catalog-bg: #f1f5f9;
+  --catalog-ink: #0f172a;
+  --catalog-muted: #64748b;
+  --catalog-accent: #475569;
+  --catalog-accent-soft: #e2e8f0;
+  --catalog-header: #0f172a;
+  --catalog-wa: #059669;
+  --catalog-promo: #94a3b8;
+  --catalog-hero-mid: #334155;
+  --catalog-hero-glow-a: rgba(71, 85, 105, 0.18);
+  --catalog-hero-glow-b: rgba(100, 116, 139, 0.12);
+  --catalog-hero-accent-line: #cbd5e1;
+}
+
+.catalog-site[data-catalog-theme="bold"] {
+  --catalog-bg: #ffffff;
+  --catalog-ink: #000000;
+  --catalog-muted: #525252;
+  --catalog-accent: #000000;
+  --catalog-accent-soft: #f5f5f5;
+  --catalog-header: #000000;
+  --catalog-wa: #25d366;
+  --catalog-promo: #ef4444;
+  --catalog-hero-mid: #171717;
+  --catalog-hero-glow-a: rgba(0, 0, 0, 0.08);
+  --catalog-hero-glow-b: rgba(37, 211, 102, 0.1);
+  --catalog-hero-accent-line: #25d366;
+}
+
+.catalog-site {
+  background-color: var(--catalog-bg);
+  color: var(--catalog-ink);
+}
+
+.catalog-gradient-mesh {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, var(--catalog-hero-glow-a), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, var(--catalog-hero-glow-b), transparent 50%),
+    linear-gradient(
+      165deg,
+      var(--catalog-header) 0%,
+      var(--catalog-hero-mid) 48%,
+      var(--catalog-header) 100%
+    );
+}
+
+.catalog-card {
+  background: var(--catalog-surface);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 4px 16px rgba(17, 24, 39, 0.06);
+}
+
+.catalog-card:hover {
+  box-shadow:
+    0 4px 8px rgba(17, 24, 39, 0.06),
+    0 12px 32px rgba(17, 24, 39, 0.1);
+}

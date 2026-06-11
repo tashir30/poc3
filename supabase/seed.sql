@@ -1,0 +1,1 @@
+-- Optional seed data (applied on db reset only; no auth users seeded here)
