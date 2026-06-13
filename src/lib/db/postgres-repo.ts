@@ -785,6 +785,250 @@ export async function listRecentActivity(
   }));
 }
 
+type LowStockRow = { id: string; name: string; stock_quantity: number };
+
+type RecentActivityRow = {
+  id: string;
+  change_amount: number;
+  action_type: string;
+  timestamp: string;
+  product_name: string;
+};
+
+function parseLowStockJson(value: unknown): LowStockRow[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is LowStockRow =>
+      typeof item === "object" &&
+      item !== null &&
+      typeof (item as LowStockRow).id === "string" &&
+      typeof (item as LowStockRow).name === "string" &&
+      typeof (item as LowStockRow).stock_quantity === "number",
+  );
+}
+
+function parseRecentActivityJson(value: unknown): Array<{
+  id: string;
+  change_amount: number;
+  action_type: string;
+  timestamp: string;
+  products: { name: string };
+}> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (item): item is RecentActivityRow =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as RecentActivityRow).id === "string",
+    )
+    .map((row) => ({
+      id: row.id,
+      change_amount: row.change_amount,
+      action_type: row.action_type,
+      timestamp: row.timestamp,
+      products: { name: row.product_name },
+    }));
+}
+
+export async function getDashboardSnapshot(
+  businessId: string,
+  lowStockThreshold: number,
+  lowStockLimit: number,
+  activityLimit: number,
+): Promise<import("./dashboard-types").DashboardSnapshot> {
+  const sql = getPostgres();
+  const [row] = await sql`
+    SELECT
+      (SELECT COUNT(*)::int FROM products WHERE business_id = ${businessId}) AS products_count,
+      (SELECT COUNT(*)::int FROM categories WHERE business_id = ${businessId}) AS categories_count,
+      (SELECT COUNT(*)::int FROM staff_accounts WHERE business_id = ${businessId} AND status = 'active') AS staff_count,
+      (SELECT COUNT(*)::int FROM inventory_logs il
+        JOIN products p ON p.id = il.product_id
+        WHERE p.business_id = ${businessId}
+          AND il.timestamp >= date_trunc('day', now())
+          AND il.timestamp < date_trunc('day', now()) + interval '1 day') AS activity_today,
+      (SELECT COALESCE(json_agg(json_build_object(
+          'id', ls.id,
+          'name', ls.name,
+          'stock_quantity', ls.stock_quantity
+        ) ORDER BY ls.stock_quantity ASC), '[]'::json)
+       FROM (
+         SELECT id, name, stock_quantity FROM products
+         WHERE business_id = ${businessId} AND stock_quantity <= ${lowStockThreshold}
+         ORDER BY stock_quantity ASC LIMIT ${lowStockLimit}
+       ) ls) AS low_stock,
+      (SELECT COALESCE(json_agg(json_build_object(
+          'id', ra.id,
+          'change_amount', ra.change_amount,
+          'action_type', ra.action_type,
+          'timestamp', ra.timestamp,
+          'product_name', ra.product_name
+        ) ORDER BY ra.ts DESC), '[]'::json)
+       FROM (
+         SELECT il.id, il.change_amount, il.action_type, il.timestamp, p.name AS product_name, il.timestamp AS ts
+         FROM inventory_logs il
+         JOIN products p ON p.id = il.product_id
+         WHERE p.business_id = ${businessId}
+         ORDER BY il.timestamp DESC LIMIT ${activityLimit}
+       ) ra) AS recent_activity
+  `;
+
+  return {
+    productsCount: row.products_count as number,
+    categoriesCount: row.categories_count as number,
+    staffCount: row.staff_count as number,
+    activityToday: row.activity_today as number,
+    lowStock: parseLowStockJson(row.low_stock),
+    recentActivity: parseRecentActivityJson(row.recent_activity),
+  };
+}
+
+export async function getCatalogPageBySlug(slug: string): Promise<{
+  business: Business;
+  products: PublicProduct[];
+  categories: Category[];
+} | null> {
+  const sql = getPostgres();
+  const rows = await sql`
+    SELECT
+      b.*,
+      COALESCE(
+        (SELECT json_agg(json_build_object(
+          'id', p.id,
+          'business_id', p.business_id,
+          'category_id', p.category_id,
+          'name', p.name,
+          'description', p.description,
+          'image_url', p.image_url,
+          'price_text', p.price_text,
+          'active', p.active,
+          'created_at', p.created_at,
+          'updated_at', p.updated_at
+        ) ORDER BY p.name ASC)
+         FROM products p
+         WHERE p.business_id = b.id AND p.active = true),
+        '[]'::json
+      ) AS products_json,
+      COALESCE(
+        (SELECT json_agg(json_build_object(
+          'id', c.id,
+          'business_id', c.business_id,
+          'name', c.name,
+          'description', c.description,
+          'created_at', c.created_at
+        ) ORDER BY c.name ASC)
+         FROM categories c
+         WHERE c.business_id = b.id),
+        '[]'::json
+      ) AS categories_json
+    FROM businesses b
+    WHERE b.slug = ${slug}
+    LIMIT 1
+  `;
+
+  const row = rows[0] as
+    | (Business & { products_json: unknown; categories_json: unknown })
+    | undefined;
+  if (!row) return null;
+
+  const productsRaw = Array.isArray(row.products_json) ? row.products_json : [];
+  const categoriesRaw = Array.isArray(row.categories_json) ? row.categories_json : [];
+
+  return {
+    business: mapBusiness(row),
+    products: castRows<ProductRow[]>(productsRaw).map(mapPublicProduct),
+    categories: castRows<Category[]>(categoriesRaw),
+  };
+}
+
+export async function getPublicProductPageBySlug(
+  slug: string,
+  productId: string,
+): Promise<{
+  business: Business;
+  product: PublicProduct;
+  category: Category | null;
+} | null> {
+  const sql = getPostgres();
+  const rows = await sql`
+    SELECT
+      b.*,
+      p.id AS p_id,
+      p.business_id AS p_business_id,
+      p.category_id AS p_category_id,
+      p.name AS p_name,
+      p.description AS p_description,
+      p.image_url AS p_image_url,
+      p.price_text AS p_price_text,
+      p.active AS p_active,
+      p.created_at AS p_created_at,
+      p.updated_at AS p_updated_at,
+      c.id AS c_id,
+      c.business_id AS c_business_id,
+      c.name AS c_name,
+      c.description AS c_description,
+      c.created_at AS c_created_at
+    FROM businesses b
+    INNER JOIN products p ON p.business_id = b.id AND p.id = ${productId} AND p.active = true
+    LEFT JOIN categories c ON c.id = p.category_id AND c.business_id = b.id
+    WHERE b.slug = ${slug}
+    LIMIT 1
+  `;
+
+  const row = rows[0] as
+    | (Business & {
+        p_id: string;
+        p_business_id: string;
+        p_category_id: string | null;
+        p_name: string;
+        p_description: string | null;
+        p_image_url: string | null;
+        p_price_text: string;
+        p_active: boolean | number;
+        p_created_at: string;
+        p_updated_at: string;
+        c_id: string | null;
+        c_business_id: string | null;
+        c_name: string | null;
+        c_description: string | null;
+        c_created_at: string | null;
+      })
+    | undefined;
+
+  if (!row) return null;
+
+  const business = mapBusiness(row);
+  const product = mapPublicProduct(
+    mapProduct({
+      id: row.p_id,
+      business_id: row.p_business_id,
+      category_id: row.p_category_id,
+      name: row.p_name,
+      description: row.p_description,
+      image_url: row.p_image_url,
+      price_text: row.p_price_text,
+      active: row.p_active,
+      created_at: row.p_created_at,
+      updated_at: row.p_updated_at,
+      stock_quantity: 0,
+    } as ProductRow),
+  );
+
+  const category =
+    row.c_id && row.c_name && row.c_business_id
+      ? {
+          id: row.c_id,
+          business_id: row.c_business_id,
+          name: row.c_name,
+          description: row.c_description,
+          created_at: row.c_created_at ?? "",
+        }
+      : null;
+
+  return { business, product, category };
+}
+
 export async function listActivityLogs(
   businessId: string,
   limit: number,

@@ -36,6 +36,26 @@ export const getSessionContext = cache(async () => {
     };
   }
 
+  if (session.businessId && session.userId) {
+    const business = await repo.getBusinessById(session.businessId);
+    if (business) {
+      return {
+        session,
+        user: { id: session.userId },
+        profile: {
+          id: session.userId,
+          phone: "",
+          name: null,
+          role: session.role,
+          business_id: session.businessId,
+          created_at: "",
+        } as Profile,
+        staff: null,
+        business,
+      };
+    }
+  }
+
   const [profile, businessFromSession] = await Promise.all([
     session.userId ? repo.getProfileById(session.userId) : Promise.resolve(null),
     session.businessId
@@ -57,7 +77,7 @@ export const getSessionContext = cache(async () => {
   };
 });
 
-export async function requireBusinessContext() {
+export const requireBusinessContext = cache(async () => {
   const ctx = await getSessionContext();
   if (!ctx.session) redirect("/login");
   if (!ctx.business) redirect("/onboarding");
@@ -92,7 +112,7 @@ export async function requireBusinessContext() {
     staff: null,
     business: ctx.business,
   };
-}
+});
 
 export async function requireMerchantAdmin() {
   const ctx = await requireBusinessContext();

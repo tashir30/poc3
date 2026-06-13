@@ -835,6 +835,77 @@ export function listRecentActivity(
   }));
 }
 
+export function getDashboardSnapshot(
+  businessId: string,
+  lowStockThreshold: number,
+  lowStockLimit: number,
+  activityLimit: number,
+): import("./dashboard-types").DashboardSnapshot {
+  const db = getDb();
+  const counts = db
+    .prepare(
+      `SELECT
+        (SELECT COUNT(*) FROM products WHERE business_id = ?) AS products_count,
+        (SELECT COUNT(*) FROM categories WHERE business_id = ?) AS categories_count,
+        (SELECT COUNT(*) FROM staff_accounts WHERE business_id = ? AND status = 'active') AS staff_count,
+        (SELECT COUNT(*) FROM inventory_logs il
+          JOIN products p ON p.id = il.product_id
+          WHERE p.business_id = ?
+            AND il.timestamp >= datetime('now', 'start of day')
+            AND il.timestamp < datetime('now', 'start of day', '+1 day')) AS activity_today`,
+    )
+    .get(businessId, businessId, businessId, businessId) as {
+    products_count: number;
+    categories_count: number;
+    staff_count: number;
+    activity_today: number;
+  };
+
+  return {
+    productsCount: counts.products_count,
+    categoriesCount: counts.categories_count,
+    staffCount: counts.staff_count,
+    activityToday: counts.activity_today,
+    lowStock: listLowStockProducts(businessId, lowStockThreshold, lowStockLimit),
+    recentActivity: listRecentActivity(businessId, activityLimit),
+  };
+}
+
+export function getCatalogPageBySlug(slug: string): {
+  business: Business;
+  products: PublicProduct[];
+  categories: Category[];
+} | null {
+  const business = getBusinessBySlug(slug);
+  if (!business) return null;
+  return {
+    business,
+    products: listPublicProducts(business.id),
+    categories: listCategories(business.id),
+  };
+}
+
+export function getPublicProductPageBySlug(
+  slug: string,
+  productId: string,
+): {
+  business: Business;
+  product: PublicProduct;
+  category: Category | null;
+} | null {
+  const business = getBusinessBySlug(slug);
+  if (!business) return null;
+
+  const product = getPublicProduct(productId, business.id);
+  if (!product) return null;
+
+  const category = product.category_id
+    ? getCategoryById(product.category_id, business.id)
+    : null;
+
+  return { business, product, category };
+}
+
 export function listActivityLogs(
   businessId: string,
   limit: number,

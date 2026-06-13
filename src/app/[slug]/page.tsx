@@ -12,14 +12,11 @@ export default async function PublicCatalogPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const business = await repo.getBusinessBySlug(slug);
+  const page = await repo.getCatalogPageBySlug(slug);
 
-  if (!business) notFound();
+  if (!page) notFound();
 
-  const [products, categories] = await Promise.all([
-    repo.listPublicProducts(business.id),
-    repo.listCategories(business.id),
-  ]);
+  const { business, products, categories } = page;
 
   return (
     <CatalogShell business={business} showFloatingWhatsApp={false}>

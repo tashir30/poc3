@@ -434,3 +434,24 @@ export async function listInventoryProducts(
   const impl = await getBackendRepo();
   return impl.listInventoryProducts(...args);
 }
+
+export async function getDashboardSnapshot(
+  ...args: Parameters<(typeof import("./sqlite-repo"))["getDashboardSnapshot"]>
+) {
+  const impl = await getBackendRepo();
+  return impl.getDashboardSnapshot(...args);
+}
+
+export async function getCatalogPageBySlug(
+  ...args: Parameters<(typeof import("./sqlite-repo"))["getCatalogPageBySlug"]>
+) {
+  const impl = await getBackendRepo();
+  return impl.getCatalogPageBySlug(...args);
+}
+
+export async function getPublicProductPageBySlug(
+  ...args: Parameters<(typeof import("./sqlite-repo"))["getPublicProductPageBySlug"]>
+) {
+  const impl = await getBackendRepo();
+  return impl.getPublicProductPageBySlug(...args);
+}

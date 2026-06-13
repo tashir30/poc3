@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { AdminRoutePrefetch } from "./AdminRoutePrefetch";
 import { LogoutButton } from "./LogoutButton";
 import { NavLink } from "./NavLink";
 
@@ -96,6 +97,7 @@ export function AdminShell({
 }) {
   return (
     <div className="min-h-full bg-background">
+      <AdminRoutePrefetch role={role} />
       <AdminHeader title={title} businessName={businessName} />
       <AdminNav role={role} />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">

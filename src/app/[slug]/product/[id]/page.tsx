@@ -13,17 +13,11 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
-  const business = await repo.getBusinessBySlug(slug);
+  const page = await repo.getPublicProductPageBySlug(slug, id);
 
-  if (!business) notFound();
+  if (!page) notFound();
 
-  const product = await repo.getPublicProduct(id, business.id);
-
-  if (!product) notFound();
-
-  const category = product.category_id
-    ? await repo.getCategoryById(product.category_id, business.id)
-    : null;
+  const { business, product, category } = page;
 
   const whatsappUrl = buildWhatsAppUrl(
     business.whatsapp_number,

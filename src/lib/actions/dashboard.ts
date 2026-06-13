@@ -9,30 +9,16 @@ export async function getDashboardStats() {
   const { business, profile } = await requireBusinessContext();
   const limits = getPlanLimits(business.plan);
 
-  const [
-    productsCount,
-    categoriesCount,
-    staffCount,
-    activityToday,
-    lowStock,
-    recentActivity,
-  ] = await Promise.all([
-    repo.countProducts(business.id),
-    repo.countCategories(business.id),
-    repo.countStaff(business.id),
-    repo.countDailyActivity(business.id),
-    repo.listLowStockProducts(business.id, LOW_STOCK_THRESHOLD, 10),
-    repo.listRecentActivity(business.id, 10),
-  ]);
+  const snapshot = await repo.getDashboardSnapshot(
+    business.id,
+    LOW_STOCK_THRESHOLD,
+    10,
+    10,
+  );
 
   return {
-    productsCount,
-    categoriesCount,
-    staffCount,
-    activityToday,
+    ...snapshot,
     limits,
-    lowStock,
-    recentActivity,
     business,
     profile,
   };
