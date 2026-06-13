@@ -8,6 +8,7 @@ import { LIMITS } from "@/lib/constants";
 import { isValidCatalogTheme } from "@/lib/catalog-themes";
 import { getPlanLimits } from "@/lib/plans";
 import * as repo from "@/lib/db/repo";
+import { mapSaveError } from "@/lib/db/save-error";
 import { requireMerchantAdmin, getActionAdminContext, getActionBusinessContext } from "@/lib/session";
 import { validateProductImageUrl } from "@/lib/security/urls";
 import {
@@ -126,8 +127,9 @@ export async function updateBusinessSettings(formData: FormData) {
     ) {
       return { error: "Failed to update business profile" };
     }
-  } catch {
-    return { error: "Could not save changes. Try again in a moment." };
+  } catch (err) {
+    console.error("updateBusinessSettings failed:", err);
+    return { error: mapSaveError(err) };
   }
 
   revalidateBusinessPaths(business.slug);

@@ -28,6 +28,16 @@ function castRows<T>(rows: unknown): T {
 
 type ProductRow = Product & { active: number | boolean };
 
+let businessInstagramColumnReady = false;
+
+async function ensureBusinessInstagramColumn(
+  sql: ReturnType<typeof getPostgres>,
+): Promise<void> {
+  if (businessInstagramColumnReady) return;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS instagram_url TEXT`;
+  businessInstagramColumnReady = true;
+}
+
 type UserRow = User & {
   must_change_password: number | boolean;
   is_platform_admin: number | boolean;
@@ -286,6 +296,7 @@ export async function updateBusinessById(
   },
 ): Promise<boolean> {
   const sql = getPostgres();
+  await ensureBusinessInstagramColumn(sql);
   const rows = await sql`
     UPDATE businesses
     SET name = ${data.name},

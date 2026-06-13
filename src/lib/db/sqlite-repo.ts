@@ -289,19 +289,33 @@ export function updateBusinessById(
     instagramUrl: string | null;
   },
 ): boolean {
-  getDb()
-    .prepare(
-      `UPDATE businesses
-       SET name = ?, whatsapp_number = ?, description = ?, instagram_url = ?
-       WHERE id = ?`,
-    )
-    .run(
-      data.name,
-      data.whatsappNumber,
-      data.description,
-      data.instagramUrl,
-      businessId,
-    );
+  const runUpdate = () => {
+    getDb()
+      .prepare(
+        `UPDATE businesses
+         SET name = ?, whatsapp_number = ?, description = ?, instagram_url = ?
+         WHERE id = ?`,
+      )
+      .run(
+        data.name,
+        data.whatsappNumber,
+        data.description,
+        data.instagramUrl,
+        businessId,
+      );
+  };
+
+  try {
+    runUpdate();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+    if (message.includes("SQLITE_BUSY") || message.includes("database is locked")) {
+      runUpdate();
+    } else {
+      throw err;
+    }
+  }
+
   return !!getBusinessById(businessId);
 }
 
