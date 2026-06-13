@@ -2,629 +2,435 @@ import "server-only";
 
 import { isSupabaseBackend } from "@/lib/config/backend";
 
+type SqliteRepo = typeof import("./sqlite-repo");
+type PostgresRepo = typeof import("./postgres-repo");
+
+let sqliteRepo: SqliteRepo | undefined;
+let postgresRepo: PostgresRepo | undefined;
+
+async function getSqliteRepo(): Promise<SqliteRepo> {
+  sqliteRepo ??= await import("./sqlite-repo");
+  return sqliteRepo;
+}
+
+async function getPostgresRepo(): Promise<PostgresRepo> {
+  postgresRepo ??= await import("./postgres-repo");
+  return postgresRepo;
+}
+
+async function getBackendRepo(): Promise<SqliteRepo | PostgresRepo> {
+  return isSupabaseBackend() ? getPostgresRepo() : getSqliteRepo();
+}
+
 export async function insertOtpRequest(
   ...args: Parameters<(typeof import("./sqlite-repo"))["insertOtpRequest"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.insertOtpRequest(...(args as Parameters<(typeof postgres)["insertOtpRequest"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.insertOtpRequest(...(args as Parameters<(typeof sqlite)["insertOtpRequest"]>));
+  const impl = await getBackendRepo();
+  return impl.insertOtpRequest(...args);
 }
 
 export async function getLatestOtpRequest(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getLatestOtpRequest"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getLatestOtpRequest(...(args as Parameters<(typeof postgres)["getLatestOtpRequest"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getLatestOtpRequest(...(args as Parameters<(typeof sqlite)["getLatestOtpRequest"]>));
+  const impl = await getBackendRepo();
+  return impl.getLatestOtpRequest(...args);
 }
 
 export async function deleteOtpRequestsForPhone(
   ...args: Parameters<(typeof import("./sqlite-repo"))["deleteOtpRequestsForPhone"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.deleteOtpRequestsForPhone(...(args as Parameters<(typeof postgres)["deleteOtpRequestsForPhone"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.deleteOtpRequestsForPhone(...(args as Parameters<(typeof sqlite)["deleteOtpRequestsForPhone"]>));
+  const impl = await getBackendRepo();
+  return impl.deleteOtpRequestsForPhone(...args);
 }
 
 export async function categoryBelongsToBusiness(
   ...args: Parameters<(typeof import("./sqlite-repo"))["categoryBelongsToBusiness"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.categoryBelongsToBusiness(...(args as Parameters<(typeof postgres)["categoryBelongsToBusiness"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.categoryBelongsToBusiness(...(args as Parameters<(typeof sqlite)["categoryBelongsToBusiness"]>));
+  const impl = await getBackendRepo();
+  return impl.categoryBelongsToBusiness(...args);
 }
 
 export async function getUserByPhone(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getUserByPhone"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getUserByPhone(...(args as Parameters<(typeof postgres)["getUserByPhone"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getUserByPhone(...(args as Parameters<(typeof sqlite)["getUserByPhone"]>));
+  const impl = await getBackendRepo();
+  return impl.getUserByPhone(...args);
 }
 
 export async function getUserById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getUserById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getUserById(...(args as Parameters<(typeof postgres)["getUserById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getUserById(...(args as Parameters<(typeof sqlite)["getUserById"]>));
+  const impl = await getBackendRepo();
+  return impl.getUserById(...args);
 }
 
 export async function setUserPassword(
   ...args: Parameters<(typeof import("./sqlite-repo"))["setUserPassword"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.setUserPassword(...(args as Parameters<(typeof postgres)["setUserPassword"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.setUserPassword(...(args as Parameters<(typeof sqlite)["setUserPassword"]>));
+  const impl = await getBackendRepo();
+  return impl.setUserPassword(...args);
 }
 
 export async function recordFailedMerchantLogin(
   ...args: Parameters<(typeof import("./sqlite-repo"))["recordFailedMerchantLogin"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.recordFailedMerchantLogin(...(args as Parameters<(typeof postgres)["recordFailedMerchantLogin"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.recordFailedMerchantLogin(...(args as Parameters<(typeof sqlite)["recordFailedMerchantLogin"]>));
+  const impl = await getBackendRepo();
+  return impl.recordFailedMerchantLogin(...args);
 }
 
 export async function clearMerchantLoginFailures(
   ...args: Parameters<(typeof import("./sqlite-repo"))["clearMerchantLoginFailures"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.clearMerchantLoginFailures(...(args as Parameters<(typeof postgres)["clearMerchantLoginFailures"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.clearMerchantLoginFailures(...(args as Parameters<(typeof sqlite)["clearMerchantLoginFailures"]>));
+  const impl = await getBackendRepo();
+  return impl.clearMerchantLoginFailures(...args);
 }
 
 export async function setPlatformAdminFlag(
   ...args: Parameters<(typeof import("./sqlite-repo"))["setPlatformAdminFlag"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.setPlatformAdminFlag(...(args as Parameters<(typeof postgres)["setPlatformAdminFlag"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.setPlatformAdminFlag(...(args as Parameters<(typeof sqlite)["setPlatformAdminFlag"]>));
+  const impl = await getBackendRepo();
+  return impl.setPlatformAdminFlag(...args);
 }
 
 export async function createUser(
   ...args: Parameters<(typeof import("./sqlite-repo"))["createUser"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.createUser(...(args as Parameters<(typeof postgres)["createUser"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.createUser(...(args as Parameters<(typeof sqlite)["createUser"]>));
+  const impl = await getBackendRepo();
+  return impl.createUser(...args);
 }
 
 export async function ensureUser(
   ...args: Parameters<(typeof import("./sqlite-repo"))["ensureUser"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.ensureUser(...(args as Parameters<(typeof postgres)["ensureUser"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.ensureUser(...(args as Parameters<(typeof sqlite)["ensureUser"]>));
+  const impl = await getBackendRepo();
+  return impl.ensureUser(...args);
 }
 
 export async function getProfileById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getProfileById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getProfileById(...(args as Parameters<(typeof postgres)["getProfileById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getProfileById(...(args as Parameters<(typeof sqlite)["getProfileById"]>));
+  const impl = await getBackendRepo();
+  return impl.getProfileById(...args);
 }
 
 export async function getProfileByPhone(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getProfileByPhone"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getProfileByPhone(...(args as Parameters<(typeof postgres)["getProfileByPhone"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getProfileByPhone(...(args as Parameters<(typeof sqlite)["getProfileByPhone"]>));
+  const impl = await getBackendRepo();
+  return impl.getProfileByPhone(...args);
 }
 
 export async function ensureProfile(
   ...args: Parameters<(typeof import("./sqlite-repo"))["ensureProfile"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.ensureProfile(...(args as Parameters<(typeof postgres)["ensureProfile"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.ensureProfile(...(args as Parameters<(typeof sqlite)["ensureProfile"]>));
+  const impl = await getBackendRepo();
+  return impl.ensureProfile(...args);
 }
 
 export async function updateProfile(
   ...args: Parameters<(typeof import("./sqlite-repo"))["updateProfile"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.updateProfile(...(args as Parameters<(typeof postgres)["updateProfile"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.updateProfile(...(args as Parameters<(typeof sqlite)["updateProfile"]>));
+  const impl = await getBackendRepo();
+  return impl.updateProfile(...args);
 }
 
 export async function getBusinessById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getBusinessById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getBusinessById(...(args as Parameters<(typeof postgres)["getBusinessById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getBusinessById(...(args as Parameters<(typeof sqlite)["getBusinessById"]>));
+  const impl = await getBackendRepo();
+  return impl.getBusinessById(...args);
 }
 
 export async function getBusinessBySlug(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getBusinessBySlug"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getBusinessBySlug(...(args as Parameters<(typeof postgres)["getBusinessBySlug"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getBusinessBySlug(...(args as Parameters<(typeof sqlite)["getBusinessBySlug"]>));
+  const impl = await getBackendRepo();
+  return impl.getBusinessBySlug(...args);
 }
 
 export async function slugExists(
   ...args: Parameters<(typeof import("./sqlite-repo"))["slugExists"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.slugExists(...(args as Parameters<(typeof postgres)["slugExists"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.slugExists(...(args as Parameters<(typeof sqlite)["slugExists"]>));
+  const impl = await getBackendRepo();
+  return impl.slugExists(...args);
 }
 
 export async function createBusiness(
   ...args: Parameters<(typeof import("./sqlite-repo"))["createBusiness"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.createBusiness(...(args as Parameters<(typeof postgres)["createBusiness"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.createBusiness(...(args as Parameters<(typeof sqlite)["createBusiness"]>));
+  const impl = await getBackendRepo();
+  return impl.createBusiness(...args);
 }
 
 export async function updateBusinessCatalogTheme(
   ...args: Parameters<(typeof import("./sqlite-repo"))["updateBusinessCatalogTheme"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.updateBusinessCatalogTheme(...(args as Parameters<(typeof postgres)["updateBusinessCatalogTheme"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.updateBusinessCatalogTheme(...(args as Parameters<(typeof sqlite)["updateBusinessCatalogTheme"]>));
+  const impl = await getBackendRepo();
+  return impl.updateBusinessCatalogTheme(...args);
+}
+
+export async function updateBusinessById(
+  ...args: Parameters<(typeof import("./sqlite-repo"))["updateBusinessById"]>
+) {
+  const impl = await getBackendRepo();
+  return impl.updateBusinessById(...args);
+}
+
+export async function getCategoryById(
+  ...args: Parameters<(typeof import("./sqlite-repo"))["getCategoryById"]>
+) {
+  const impl = await getBackendRepo();
+  return impl.getCategoryById(...args);
 }
 
 export async function countCategories(
   ...args: Parameters<(typeof import("./sqlite-repo"))["countCategories"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.countCategories(...(args as Parameters<(typeof postgres)["countCategories"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.countCategories(...(args as Parameters<(typeof sqlite)["countCategories"]>));
+  const impl = await getBackendRepo();
+  return impl.countCategories(...args);
 }
 
 export async function listCategories(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listCategories"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listCategories(...(args as Parameters<(typeof postgres)["listCategories"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listCategories(...(args as Parameters<(typeof sqlite)["listCategories"]>));
+  const impl = await getBackendRepo();
+  return impl.listCategories(...args);
 }
 
 export async function insertCategory(
   ...args: Parameters<(typeof import("./sqlite-repo"))["insertCategory"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.insertCategory(...(args as Parameters<(typeof postgres)["insertCategory"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.insertCategory(...(args as Parameters<(typeof sqlite)["insertCategory"]>));
+  const impl = await getBackendRepo();
+  return impl.insertCategory(...args);
 }
 
 export async function deleteCategoryById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["deleteCategoryById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.deleteCategoryById(...(args as Parameters<(typeof postgres)["deleteCategoryById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.deleteCategoryById(...(args as Parameters<(typeof sqlite)["deleteCategoryById"]>));
+  const impl = await getBackendRepo();
+  return impl.deleteCategoryById(...args);
 }
 
 export async function countProducts(
   ...args: Parameters<(typeof import("./sqlite-repo"))["countProducts"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.countProducts(...(args as Parameters<(typeof postgres)["countProducts"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.countProducts(...(args as Parameters<(typeof sqlite)["countProducts"]>));
+  const impl = await getBackendRepo();
+  return impl.countProducts(...args);
 }
 
 export async function listProducts(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listProducts"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listProducts(...(args as Parameters<(typeof postgres)["listProducts"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listProducts(...(args as Parameters<(typeof sqlite)["listProducts"]>));
+  const impl = await getBackendRepo();
+  return impl.listProducts(...args);
 }
 
 export async function listProductsWithCategory(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listProductsWithCategory"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listProductsWithCategory(...(args as Parameters<(typeof postgres)["listProductsWithCategory"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listProductsWithCategory(...(args as Parameters<(typeof sqlite)["listProductsWithCategory"]>));
+  const impl = await getBackendRepo();
+  return impl.listProductsWithCategory(...args);
 }
 
 export async function getProductById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getProductById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getProductById(...(args as Parameters<(typeof postgres)["getProductById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getProductById(...(args as Parameters<(typeof sqlite)["getProductById"]>));
+  const impl = await getBackendRepo();
+  return impl.getProductById(...args);
 }
 
 export async function insertProduct(
   ...args: Parameters<(typeof import("./sqlite-repo"))["insertProduct"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.insertProduct(...(args as Parameters<(typeof postgres)["insertProduct"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.insertProduct(...(args as Parameters<(typeof sqlite)["insertProduct"]>));
+  const impl = await getBackendRepo();
+  return impl.insertProduct(...args);
 }
 
 export async function updateProductById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["updateProductById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.updateProductById(...(args as Parameters<(typeof postgres)["updateProductById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.updateProductById(...(args as Parameters<(typeof sqlite)["updateProductById"]>));
+  const impl = await getBackendRepo();
+  return impl.updateProductById(...args);
 }
 
 export async function deleteProductById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["deleteProductById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.deleteProductById(...(args as Parameters<(typeof postgres)["deleteProductById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.deleteProductById(...(args as Parameters<(typeof sqlite)["deleteProductById"]>));
+  const impl = await getBackendRepo();
+  return impl.deleteProductById(...args);
 }
 
 export async function listPublicProducts(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listPublicProducts"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listPublicProducts(...(args as Parameters<(typeof postgres)["listPublicProducts"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listPublicProducts(...(args as Parameters<(typeof sqlite)["listPublicProducts"]>));
+  const impl = await getBackendRepo();
+  return impl.listPublicProducts(...args);
 }
 
 export async function getPublicProduct(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getPublicProduct"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getPublicProduct(...(args as Parameters<(typeof postgres)["getPublicProduct"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getPublicProduct(...(args as Parameters<(typeof sqlite)["getPublicProduct"]>));
+  const impl = await getBackendRepo();
+  return impl.getPublicProduct(...args);
 }
 
 export async function updateProductStock(
   ...args: Parameters<(typeof import("./sqlite-repo"))["updateProductStock"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.updateProductStock(...(args as Parameters<(typeof postgres)["updateProductStock"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.updateProductStock(...(args as Parameters<(typeof sqlite)["updateProductStock"]>));
+  const impl = await getBackendRepo();
+  return impl.updateProductStock(...args);
 }
 
 export async function insertInventoryLog(
   ...args: Parameters<(typeof import("./sqlite-repo"))["insertInventoryLog"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.insertInventoryLog(...(args as Parameters<(typeof postgres)["insertInventoryLog"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.insertInventoryLog(...(args as Parameters<(typeof sqlite)["insertInventoryLog"]>));
+  const impl = await getBackendRepo();
+  return impl.insertInventoryLog(...args);
 }
 
 export async function countDailyActivity(
   ...args: Parameters<(typeof import("./sqlite-repo"))["countDailyActivity"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.countDailyActivity(...(args as Parameters<(typeof postgres)["countDailyActivity"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.countDailyActivity(...(args as Parameters<(typeof sqlite)["countDailyActivity"]>));
+  const impl = await getBackendRepo();
+  return impl.countDailyActivity(...args);
 }
 
 export async function countStaff(
   ...args: Parameters<(typeof import("./sqlite-repo"))["countStaff"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.countStaff(...(args as Parameters<(typeof postgres)["countStaff"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.countStaff(...(args as Parameters<(typeof sqlite)["countStaff"]>));
+  const impl = await getBackendRepo();
+  return impl.countStaff(...args);
 }
 
 export async function listStaff(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listStaff"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listStaff(...(args as Parameters<(typeof postgres)["listStaff"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listStaff(...(args as Parameters<(typeof sqlite)["listStaff"]>));
+  const impl = await getBackendRepo();
+  return impl.listStaff(...args);
 }
 
 export async function getStaffByUsername(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getStaffByUsername"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getStaffByUsername(...(args as Parameters<(typeof postgres)["getStaffByUsername"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getStaffByUsername(...(args as Parameters<(typeof sqlite)["getStaffByUsername"]>));
+  const impl = await getBackendRepo();
+  return impl.getStaffByUsername(...args);
 }
 
 export async function getStaffById(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getStaffById"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getStaffById(...(args as Parameters<(typeof postgres)["getStaffById"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getStaffById(...(args as Parameters<(typeof sqlite)["getStaffById"]>));
+  const impl = await getBackendRepo();
+  return impl.getStaffById(...args);
 }
 
 export async function createStaffAccount(
   ...args: Parameters<(typeof import("./sqlite-repo"))["createStaffAccount"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.createStaffAccount(...(args as Parameters<(typeof postgres)["createStaffAccount"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.createStaffAccount(...(args as Parameters<(typeof sqlite)["createStaffAccount"]>));
+  const impl = await getBackendRepo();
+  return impl.createStaffAccount(...args);
 }
 
 export async function updateStaffStatus(
   ...args: Parameters<(typeof import("./sqlite-repo"))["updateStaffStatus"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.updateStaffStatus(...(args as Parameters<(typeof postgres)["updateStaffStatus"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.updateStaffStatus(...(args as Parameters<(typeof sqlite)["updateStaffStatus"]>));
+  const impl = await getBackendRepo();
+  return impl.updateStaffStatus(...args);
 }
 
 export async function deleteStaffAccount(
   ...args: Parameters<(typeof import("./sqlite-repo"))["deleteStaffAccount"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.deleteStaffAccount(...(args as Parameters<(typeof postgres)["deleteStaffAccount"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.deleteStaffAccount(...(args as Parameters<(typeof sqlite)["deleteStaffAccount"]>));
+  const impl = await getBackendRepo();
+  return impl.deleteStaffAccount(...args);
 }
 
 export async function resetStaffPassword(
   ...args: Parameters<(typeof import("./sqlite-repo"))["resetStaffPassword"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.resetStaffPassword(...(args as Parameters<(typeof postgres)["resetStaffPassword"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.resetStaffPassword(...(args as Parameters<(typeof sqlite)["resetStaffPassword"]>));
+  const impl = await getBackendRepo();
+  return impl.resetStaffPassword(...args);
 }
 
 export async function recordFailedStaffLogin(
   ...args: Parameters<(typeof import("./sqlite-repo"))["recordFailedStaffLogin"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.recordFailedStaffLogin(...(args as Parameters<(typeof postgres)["recordFailedStaffLogin"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.recordFailedStaffLogin(...(args as Parameters<(typeof sqlite)["recordFailedStaffLogin"]>));
+  const impl = await getBackendRepo();
+  return impl.recordFailedStaffLogin(...args);
 }
 
 export async function clearStaffLoginFailures(
   ...args: Parameters<(typeof import("./sqlite-repo"))["clearStaffLoginFailures"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.clearStaffLoginFailures(...(args as Parameters<(typeof postgres)["clearStaffLoginFailures"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.clearStaffLoginFailures(...(args as Parameters<(typeof sqlite)["clearStaffLoginFailures"]>));
+  const impl = await getBackendRepo();
+  return impl.clearStaffLoginFailures(...args);
 }
 
 export async function updateBusinessPlan(
   ...args: Parameters<(typeof import("./sqlite-repo"))["updateBusinessPlan"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.updateBusinessPlan(...(args as Parameters<(typeof postgres)["updateBusinessPlan"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.updateBusinessPlan(...(args as Parameters<(typeof sqlite)["updateBusinessPlan"]>));
+  const impl = await getBackendRepo();
+  return impl.updateBusinessPlan(...args);
 }
 
 export async function insertSubscription(
   ...args: Parameters<(typeof import("./sqlite-repo"))["insertSubscription"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.insertSubscription(...(args as Parameters<(typeof postgres)["insertSubscription"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.insertSubscription(...(args as Parameters<(typeof sqlite)["insertSubscription"]>));
+  const impl = await getBackendRepo();
+  return impl.insertSubscription(...args);
 }
 
 export async function completeSubscription(
   ...args: Parameters<(typeof import("./sqlite-repo"))["completeSubscription"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.completeSubscription(...(args as Parameters<(typeof postgres)["completeSubscription"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.completeSubscription(...(args as Parameters<(typeof sqlite)["completeSubscription"]>));
+  const impl = await getBackendRepo();
+  return impl.completeSubscription(...args);
 }
 
 export async function listPlatformBusinesses(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listPlatformBusinesses"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listPlatformBusinesses(...(args as Parameters<(typeof postgres)["listPlatformBusinesses"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listPlatformBusinesses(...(args as Parameters<(typeof sqlite)["listPlatformBusinesses"]>));
+  const impl = await getBackendRepo();
+  return impl.listPlatformBusinesses(...args);
 }
 
 export async function getPlatformStats(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getPlatformStats"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getPlatformStats(...(args as Parameters<(typeof postgres)["getPlatformStats"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getPlatformStats(...(args as Parameters<(typeof sqlite)["getPlatformStats"]>));
+  const impl = await getBackendRepo();
+  return impl.getPlatformStats(...args);
 }
 
 export async function listLowStockProducts(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listLowStockProducts"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listLowStockProducts(...(args as Parameters<(typeof postgres)["listLowStockProducts"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listLowStockProducts(...(args as Parameters<(typeof sqlite)["listLowStockProducts"]>));
+  const impl = await getBackendRepo();
+  return impl.listLowStockProducts(...args);
 }
 
 export async function listRecentActivity(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listRecentActivity"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listRecentActivity(...(args as Parameters<(typeof postgres)["listRecentActivity"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listRecentActivity(...(args as Parameters<(typeof sqlite)["listRecentActivity"]>));
+  const impl = await getBackendRepo();
+  return impl.listRecentActivity(...args);
 }
 
 export async function listActivityLogs(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listActivityLogs"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listActivityLogs(...(args as Parameters<(typeof postgres)["listActivityLogs"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listActivityLogs(...(args as Parameters<(typeof sqlite)["listActivityLogs"]>));
+  const impl = await getBackendRepo();
+  return impl.listActivityLogs(...args);
 }
 
 export async function getProductStock(
   ...args: Parameters<(typeof import("./sqlite-repo"))["getProductStock"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.getProductStock(...(args as Parameters<(typeof postgres)["getProductStock"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.getProductStock(...(args as Parameters<(typeof sqlite)["getProductStock"]>));
+  const impl = await getBackendRepo();
+  return impl.getProductStock(...args);
 }
 
 export async function listInventoryProducts(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listInventoryProducts"]>
 ) {
-  if (isSupabaseBackend()) {
-    const postgres = await import("./postgres-repo");
-    return postgres.listInventoryProducts(...(args as Parameters<(typeof postgres)["listInventoryProducts"]>));
-  }
-  const sqlite = await import("./sqlite-repo");
-  return sqlite.listInventoryProducts(...(args as Parameters<(typeof sqlite)["listInventoryProducts"]>));
+  const impl = await getBackendRepo();
+  return impl.listInventoryProducts(...args);
 }

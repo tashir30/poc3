@@ -1,15 +1,18 @@
+import { InstagramIcon } from "@/components/shared/InstagramIcon";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import { buildWhatsAppUrl } from "@/lib/validation";
 
 interface CatalogFooterProps {
   businessName: string;
   whatsappNumber: string;
+  instagramUrl?: string | null;
   slug: string;
 }
 
 export function CatalogFooter({
   businessName,
   whatsappNumber,
+  instagramUrl,
   slug,
 }: CatalogFooterProps) {
   const year = new Date().getFullYear();
@@ -33,15 +36,28 @@ export function CatalogFooter({
           </div>
 
           <div className="flex flex-col gap-3 sm:items-end">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--catalog-wa)] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
-            >
-              <WhatsAppIcon className="h-4 w-4" />
-              Start a chat
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--catalog-wa)] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                Start a chat
+              </a>
+              {instagramUrl ? (
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  <InstagramIcon className="h-4 w-4" />
+                  Instagram
+                </a>
+              ) : null}
+            </div>
             <a
               href={`/${slug}`}
               className="text-sm text-slate-400 transition hover:text-white"

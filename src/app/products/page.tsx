@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminNav";
+import { DeleteSubmitButton } from "@/components/admin/DeleteSubmitButton";
 import * as repo from "@/lib/db/repo";
 import { requireBusinessContext } from "@/lib/session";
 import { deleteProduct } from "@/lib/actions/catalog";
@@ -59,12 +60,7 @@ export default async function ProductsPage() {
                       Edit
                     </Link>
                     <form action={deleteAction}>
-                      <button
-                        type="submit"
-                        className="text-sm font-bold uppercase tracking-wide text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
+                      <DeleteSubmitButton />
                     </form>
                   </div>
                 </div>

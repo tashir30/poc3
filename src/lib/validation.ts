@@ -43,6 +43,7 @@ const RESERVED_SLUGS = new Set([
   "platform",
   "account",
   "api",
+  "settings",
 ]);
 
 export function isReservedSlug(slug: string): boolean {
@@ -129,4 +130,33 @@ export function buildMultiProductEnquiryMessage(
 export function buildCatalogEnquiryMessage(businessName: string): string {
   const safeBusiness = sanitizeMessageField(businessName, LIMITS.businessNameMax);
   return `Hello, I am interested in products from ${safeBusiness}.`;
+}
+
+export function normalizeInstagramUrl(input: string): string | null {
+  const trimmed = input.trim().slice(0, LIMITS.instagramUrlMax);
+  if (!trimmed) return null;
+
+  let handle = trimmed;
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+      if (host !== "instagram.com") return null;
+      const parts = url.pathname.split("/").filter(Boolean);
+      if (parts.length === 0 || parts[0] === "p" || parts[0] === "reel") {
+        return null;
+      }
+      handle = parts[0] ?? "";
+    } catch {
+      return null;
+    }
+  } else {
+    handle = handle.replace(/^@/, "");
+  }
+
+  if (!/^[a-zA-Z0-9._]{1,30}$/.test(handle)) {
+    return null;
+  }
+
+  return `https://instagram.com/${handle}`;
 }

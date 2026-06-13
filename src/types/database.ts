@@ -41,6 +41,7 @@ export interface Business {
   whatsapp_number: string;
   logo_url: string | null;
   description: string | null;
+  instagram_url: string | null;
   catalog_theme: CatalogThemeId;
   plan: BusinessPlanId;
   plan_status: PlanStatus;

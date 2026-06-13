@@ -4,6 +4,10 @@ export const FREE_PLAN = PLANS.free;
 
 export const LOW_STOCK_THRESHOLD = 5;
 
+/** Shown on the public catalog when the business has no custom tagline. */
+export const DEFAULT_CATALOG_TAGLINE =
+  "Browse our products and enquire on WhatsApp — no online payment needed.";
+
 export const LIMITS = {
   phoneMin: 8,
   phoneMax: 20,
@@ -17,6 +21,7 @@ export const LIMITS = {
   allowedImageTypes: ["image/jpeg", "image/png", "image/webp"] as const,
   maxEnquiryProducts: 20,
   maxWhatsAppUrlLength: 1800,
+  instagramUrlMax: 200,
 } as const;
 
 export const OTP_TTL_MS = 10 * 60 * 1000;

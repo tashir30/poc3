@@ -1,3 +1,5 @@
+import { DEFAULT_CATALOG_TAGLINE } from "@/lib/constants";
+
 interface CatalogHeroProps {
   businessName: string;
   description?: string | null;
@@ -11,9 +13,7 @@ export function CatalogHero({
   productCount,
   categoryCount,
 }: CatalogHeroProps) {
-  const tagline =
-    description?.trim() ||
-    "Quality products, personal service — enquire on WhatsApp in one tap.";
+  const tagline = description?.trim() || DEFAULT_CATALOG_TAGLINE;
 
   return (
     <section className="catalog-gradient-mesh relative hidden overflow-hidden text-white md:block">

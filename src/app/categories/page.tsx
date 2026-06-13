@@ -1,9 +1,11 @@
 import { AdminShell } from "@/components/admin/AdminNav";
+import { DeleteSubmitButton } from "@/components/admin/DeleteSubmitButton";
 import * as repo from "@/lib/db/repo";
 import { requireBusinessContext } from "@/lib/session";
 import { deleteCategoryAction } from "@/lib/actions/category-actions";
 import { createCategory } from "@/lib/actions/catalog";
-import { Button, Card, Input, Label } from "@/components/ui/Form";
+import { Card, Input, Label } from "@/components/ui/Form";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { redirect } from "next/navigation";
 
 export default async function CategoriesPage() {
@@ -25,9 +27,9 @@ export default async function CategoriesPage() {
               <Label>Description (optional)</Label>
               <Input name="description" placeholder="Bats, balls, pads..." />
             </div>
-            <Button type="submit" fullWidth>
+            <SubmitButton pendingLabel="Adding..." fullWidth>
               Add category
-            </Button>
+            </SubmitButton>
           </form>
         </Card>
 
@@ -46,12 +48,7 @@ export default async function CategoriesPage() {
                 )}
               </div>
               <form action={deleteCategoryAction.bind(null, category.id)}>
-                <button
-                  type="submit"
-                  className="text-sm font-bold uppercase tracking-wide text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
+                <DeleteSubmitButton />
               </form>
             </div>
           ))}

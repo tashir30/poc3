@@ -1,17 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/Form";
 
 export function LogoutButton() {
+  const [loading, setLoading] = useState(false);
+
   return (
     <Button
       variant="secondary"
+      disabled={loading}
       onClick={async () => {
-        await fetch("/api/auth/logout", { method: "POST" });
-        window.location.href = "/login";
+        setLoading(true);
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+          window.location.href = "/login";
+        } catch {
+          setLoading(false);
+        }
       }}
     >
-      Log out
+      {loading ? "Logging out..." : "Log out"}
     </Button>
   );
 }

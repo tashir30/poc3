@@ -27,12 +27,14 @@ export function CatalogShell({
         businessName={business.name}
         logoUrl={business.logo_url}
         whatsappNumber={business.whatsapp_number}
+        instagramUrl={business.instagram_url}
         tagline={business.description}
       />
       <main className="flex-1">{children}</main>
       <CatalogFooter
         businessName={business.name}
         whatsappNumber={business.whatsapp_number}
+        instagramUrl={business.instagram_url}
         slug={business.slug}
       />
       {showFloatingWhatsApp ? (

@@ -39,6 +39,7 @@ function mapBusiness(
     plan_status: row.plan_status ?? "active",
     plan_expires_at: row.plan_expires_at ?? null,
     timezone: row.timezone ?? "Asia/Kolkata",
+    instagram_url: row.instagram_url ?? null,
   };
 }
 
@@ -279,6 +280,43 @@ export function updateBusinessCatalogTheme(
   return result.changes > 0;
 }
 
+export function updateBusinessById(
+  businessId: string,
+  data: {
+    name: string;
+    whatsappNumber: string;
+    description: string | null;
+    instagramUrl: string | null;
+  },
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE businesses
+       SET name = ?, whatsapp_number = ?, description = ?, instagram_url = ?
+       WHERE id = ?`,
+    )
+    .run(
+      data.name,
+      data.whatsappNumber,
+      data.description,
+      data.instagramUrl,
+      businessId,
+    );
+  return result.changes > 0;
+}
+
+export function getCategoryById(
+  categoryId: string,
+  businessId: string,
+): Category | null {
+  const row = getDb()
+    .prepare(
+      "SELECT * FROM categories WHERE id = ? AND business_id = ? LIMIT 1",
+    )
+    .get(categoryId, businessId) as Category | undefined;
+  return row ?? null;
+}
+
 export function countCategories(businessId: string): number {
   const row = getDb()
     .prepare("SELECT COUNT(*) as count FROM categories WHERE business_id = ?")
@@ -368,12 +406,13 @@ export function insertProduct(data: {
   description: string | null;
   priceText: string;
   imageUrl: string | null;
+  active: boolean;
 }): void {
   getDb()
     .prepare(
       `INSERT INTO products
        (id, business_id, category_id, name, description, image_url, price_text, stock_quantity, active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
     )
     .run(
       newId(),
@@ -383,6 +422,7 @@ export function insertProduct(data: {
       data.description,
       data.imageUrl,
       data.priceText,
+      data.active ? 1 : 0,
     );
 }
 

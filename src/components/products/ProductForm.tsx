@@ -125,12 +125,14 @@ export function ProductForm({
               />
             )}
           </div>
-          {initial && (
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" name="active" defaultChecked={initial.active} />
-              Visible in catalog
-            </label>
-          )}
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              name="active"
+              defaultChecked={initial?.active ?? true}
+            />
+            Visible in catalog
+          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? "Saving..." : "Save product"}

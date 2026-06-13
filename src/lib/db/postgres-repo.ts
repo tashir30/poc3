@@ -47,6 +47,7 @@ function mapBusiness(
     plan_status: row.plan_status ?? "active",
     plan_expires_at: row.plan_expires_at ?? null,
     timezone: row.timezone ?? "Asia/Kolkata",
+    instagram_url: row.instagram_url ?? null,
   };
 }
 
@@ -275,6 +276,41 @@ export async function updateBusinessCatalogTheme(
   return result.count > 0;
 }
 
+export async function updateBusinessById(
+  businessId: string,
+  data: {
+    name: string;
+    whatsappNumber: string;
+    description: string | null;
+    instagramUrl: string | null;
+  },
+): Promise<boolean> {
+  const sql = getPostgres();
+  const result = await sql`
+    UPDATE businesses
+    SET name = ${data.name},
+        whatsapp_number = ${data.whatsappNumber},
+        description = ${data.description},
+        instagram_url = ${data.instagramUrl}
+    WHERE id = ${businessId}
+  `;
+  return result.count > 0;
+}
+
+export async function getCategoryById(
+  categoryId: string,
+  businessId: string,
+): Promise<Category | null> {
+  const sql = getPostgres();
+  const rows = await sql`
+    SELECT * FROM categories
+    WHERE id = ${categoryId} AND business_id = ${businessId}
+    LIMIT 1
+  `;
+  const row = rows[0] as Category | undefined;
+  return row ?? null;
+}
+
 export async function countCategories(businessId: string): Promise<number> {
   const sql = getPostgres();
   const [row] = await sql`
@@ -369,12 +405,13 @@ export async function insertProduct(data: {
   description: string | null;
   priceText: string;
   imageUrl: string | null;
+  active: boolean;
 }): Promise<void> {
   const sql = getPostgres();
   await sql`
     INSERT INTO products
       (id, business_id, category_id, name, description, image_url, price_text, stock_quantity, active)
-    VALUES (${newId()}, ${data.businessId}, ${data.categoryId}, ${data.name}, ${data.description}, ${data.imageUrl}, ${data.priceText}, 0, true)
+    VALUES (${newId()}, ${data.businessId}, ${data.categoryId}, ${data.name}, ${data.description}, ${data.imageUrl}, ${data.priceText}, 0, ${data.active})
   `;
 }
 

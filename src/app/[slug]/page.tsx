@@ -4,6 +4,8 @@ import { CatalogHero } from "@/components/catalog/CatalogHero";
 import { CatalogPageClient } from "@/components/catalog/CatalogPageClient";
 import { CatalogShell } from "@/components/catalog/CatalogShell";
 
+export const revalidate = 60;
+
 export default async function PublicCatalogPage({
   params,
 }: {
@@ -14,8 +16,10 @@ export default async function PublicCatalogPage({
 
   if (!business) notFound();
 
-  const products = await repo.listPublicProducts(business.id);
-  const categories = await repo.listCategories(business.id);
+  const [products, categories] = await Promise.all([
+    repo.listPublicProducts(business.id),
+    repo.listCategories(business.id),
+  ]);
 
   return (
     <CatalogShell business={business} showFloatingWhatsApp={false}>

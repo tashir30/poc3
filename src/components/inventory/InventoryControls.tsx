@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { updateInventory } from "@/lib/actions/catalog";
 
 interface InventoryControlsProps {
@@ -10,16 +10,20 @@ interface InventoryControlsProps {
 
 export function InventoryControls({
   productId,
-  stockQuantity,
+  stockQuantity: initialStock,
 }: InventoryControlsProps) {
   const [pending, startTransition] = useTransition();
+  const [stockQuantity, setStockQuantity] = useState(initialStock);
 
   function adjust(
     amount: number,
     actionType: "SALE" | "STOCK_ADDED" | "MANUAL_ADJUSTMENT",
   ) {
     startTransition(async () => {
-      await updateInventory(productId, amount, actionType);
+      const result = await updateInventory(productId, amount, actionType);
+      if (result.ok && typeof result.stock === "number") {
+        setStockQuantity(result.stock);
+      }
     });
   }
 
@@ -30,6 +34,9 @@ export function InventoryControls({
         <span className="font-display text-lg font-bold text-brand-navy">
           {stockQuantity}
         </span>
+        {pending ? (
+          <span className="ml-2 text-xs font-medium text-slate-500">Updating...</span>
+        ) : null}
       </p>
       <div className="grid grid-cols-4 gap-2">
         <button

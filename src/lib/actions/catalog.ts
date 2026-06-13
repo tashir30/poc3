@@ -18,12 +18,27 @@ import {
   isValidSlug,
   isReservedSlug,
   normalizePhone,
+  normalizeInstagramUrl,
   sanitizeText,
   slugify,
 } from "@/lib/validation";
 
 async function requireAdmin() {
   return requireMerchantAdmin();
+}
+
+function revalidateCatalogProductPaths(businessSlug: string, productId?: string) {
+  revalidatePath("/products");
+  revalidatePath(`/${businessSlug}`);
+  if (productId) {
+    revalidatePath(`/${businessSlug}/product/${productId}`);
+  }
+}
+
+function revalidateBusinessPaths(businessSlug: string) {
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  revalidatePath(`/${businessSlug}`);
 }
 
 export async function createBusiness(formData: FormData) {
@@ -76,6 +91,41 @@ export async function createBusiness(formData: FormData) {
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
+}
+
+export async function updateBusinessSettings(formData: FormData) {
+  const { business } = await requireAdmin();
+
+  const name = sanitizeText(formData.get("name")?.toString() ?? "", LIMITS.businessNameMax);
+  const whatsapp = normalizePhone(formData.get("whatsapp_number")?.toString() ?? "");
+  const description = sanitizeText(
+    formData.get("description")?.toString() ?? "",
+    500,
+  );
+  const instagramRaw = formData.get("instagram_url")?.toString() ?? "";
+  const instagramUrl = instagramRaw.trim()
+    ? normalizeInstagramUrl(instagramRaw)
+    : null;
+
+  if (!name) return { error: "Business name is required" };
+  if (!whatsapp) return { error: "A valid WhatsApp number is required" };
+  if (instagramRaw.trim() && !instagramUrl) {
+    return { error: "Enter a valid Instagram handle or profile URL" };
+  }
+
+  if (
+    !(await repo.updateBusinessById(business.id, {
+      name,
+      whatsappNumber: whatsapp,
+      description: description || null,
+      instagramUrl,
+    }))
+  ) {
+    return { error: "Failed to update business profile" };
+  }
+
+  revalidateBusinessPaths(business.slug);
+  return { ok: true };
 }
 
 export async function createCategory(formData: FormData): Promise<void> {
@@ -148,6 +198,8 @@ export async function createProduct(formData: FormData) {
     return { error: "Invalid category" };
   }
 
+  const active = formData.get("active") === "on";
+
   await repo.insertProduct({
     businessId: business.id,
     categoryId,
@@ -155,10 +207,10 @@ export async function createProduct(formData: FormData) {
     description: description || null,
     priceText,
     imageUrl,
+    active,
   });
 
-  revalidatePath("/products");
-  revalidatePath(`/${business.slug}`);
+  revalidateCatalogProductPaths(business.slug);
   redirect("/products");
 }
 
@@ -200,8 +252,7 @@ export async function updateProduct(productId: string, formData: FormData) {
     return { error: "Product not found" };
   }
 
-  revalidatePath("/products");
-  revalidatePath(`/${business.slug}`);
+  revalidateCatalogProductPaths(business.slug, productId);
   redirect("/products");
 }
 
@@ -212,8 +263,7 @@ export async function deleteProduct(productId: string): Promise<void> {
     throw new Error("Product not found");
   }
 
-  revalidatePath("/products");
-  revalidatePath(`/${business.slug}`);
+  revalidateCatalogProductPaths(business.slug, productId);
 }
 
 export async function uploadProductImage(formData: FormData) {
@@ -289,8 +339,7 @@ export async function updateCatalogTheme(themeId: string) {
   }
 
   await repo.updateBusinessCatalogTheme(ctx.business.id, themeId);
-  revalidatePath("/dashboard");
-  revalidatePath(`/${ctx.business.slug}`);
+  revalidateBusinessPaths(ctx.business.slug);
 
   return { ok: true, themeId };
 }

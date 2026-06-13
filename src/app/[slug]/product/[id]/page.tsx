@@ -5,6 +5,8 @@ import { CatalogShell } from "@/components/catalog/CatalogShell";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import { buildProductEnquiryMessage, buildWhatsAppUrl } from "@/lib/validation";
 
+export const revalidate = 60;
+
 export default async function ProductDetailPage({
   params,
 }: {
@@ -20,7 +22,7 @@ export default async function ProductDetailPage({
   if (!product) notFound();
 
   const category = product.category_id
-    ? (await repo.listCategories(business.id)).find((c) => c.id === product.category_id)
+    ? await repo.getCategoryById(product.category_id, business.id)
     : null;
 
   const whatsappUrl = buildWhatsAppUrl(

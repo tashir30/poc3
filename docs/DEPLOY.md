@@ -137,6 +137,13 @@ npx supabase db push
 
 If `db push` fails due to old 001/002 files, use **Option A** (SQL editor + 003 only).
 
+### Existing projects (after initial deploy)
+
+If the app was deployed before business settings / Instagram support, also run these in the SQL Editor (in order):
+
+1. `poc3/supabase/migrations/004_business_instagram.sql` — adds `instagram_url` on `businesses`
+2. `poc3/supabase/migrations/005_products_business_active_index.sql` — index for faster catalog queries
+
 **✓ Done when:** Step 4 checks pass.
 
 ---
@@ -358,9 +365,16 @@ Vercel redeploys automatically. **Supabase is not touched.**
 
 ## When you change database schema
 
-1. Add a new file: `poc3/supabase/migrations/004_your_change.sql`
+1. Add a new file under `poc3/supabase/migrations/` (e.g. `004_business_instagram.sql`)
 2. Run it in Supabase **SQL Editor** (or `supabase db push`)
 3. Deploy app if code depends on the change
+
+Current incremental migrations (run on top of 003):
+
+| File | Purpose |
+|------|---------|
+| `004_business_instagram.sql` | `businesses.instagram_url` for catalog social link |
+| `005_products_business_active_index.sql` | Index on `products(business_id, active)` |
 
 ---
 
@@ -468,6 +482,7 @@ Part 1 — Supabase
 [ ] Step 1  Create project
 [ ] Step 2  Save URL, service_role, DATABASE_URL
 [ ] Step 3  Run 003_elevo_platform.sql
+[ ] Step 3b Run 004 + 005 if upgrading an existing Supabase project
 [ ] Step 4  Verify tables + product-images bucket
 
 Part 2 — Vercel

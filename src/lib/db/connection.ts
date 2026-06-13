@@ -194,6 +194,11 @@ function runMigrations(database: Database.Database): void {
     "timezone TEXT NOT NULL DEFAULT 'Asia/Kolkata'",
     "timezone",
   );
+  addColumnIfMissing(database, "businesses", "instagram_url TEXT", "instagram_url");
+
+  database.exec(
+    "CREATE INDEX IF NOT EXISTS idx_products_business_active ON products (business_id, active)",
+  );
 
   addColumnIfMissing(database, "users", "password_hash TEXT", "password_hash");
   addColumnIfMissing(database, "users", "password_updated_at TEXT", "password_updated_at");

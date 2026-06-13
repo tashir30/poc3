@@ -68,7 +68,16 @@ export function CatalogThemePicker({
         </a>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {isPending ? (
+        <p className="mt-2 text-xs font-medium text-slate-500" role="status">
+          Saving theme...
+        </p>
+      ) : null}
+
+      <div
+        className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+        aria-busy={isPending}
+      >
         {CATALOG_THEMES.map((theme) => {
           const active = selected === theme.id;
           return (

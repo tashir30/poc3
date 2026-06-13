@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { SearchIcon } from "@/components/shared/SearchIcon";
+import { InstagramIcon } from "@/components/shared/InstagramIcon";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
+import { DEFAULT_CATALOG_TAGLINE } from "@/lib/constants";
 import {
   buildCatalogEnquiryMessage,
   buildWhatsAppUrl,
@@ -11,6 +13,7 @@ interface CatalogHeaderProps {
   businessName: string;
   logoUrl?: string | null;
   whatsappNumber: string;
+  instagramUrl?: string | null;
   tagline?: string | null;
 }
 
@@ -19,11 +22,10 @@ export function CatalogHeader({
   businessName,
   logoUrl,
   whatsappNumber,
+  instagramUrl,
   tagline,
 }: CatalogHeaderProps) {
-  const promo =
-    tagline?.trim() ||
-    "Browse products & enquire on WhatsApp — no checkout needed.";
+  const promo = tagline?.trim() || DEFAULT_CATALOG_TAGLINE;
 
   const whatsappUrl = buildWhatsAppUrl(
     whatsappNumber,
@@ -33,7 +35,7 @@ export function CatalogHeader({
   return (
     <header className="sticky top-0 z-50 bg-[var(--catalog-header)] text-white">
       {/* Mobile */}
-      <div className="mx-auto grid max-w-6xl grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2 px-3 py-3 md:hidden">
+      <div className="mx-auto grid max-w-6xl grid-cols-[2.25rem_1fr_auto] items-center gap-2 px-3 py-3 md:hidden">
         <a
           href="#catalog-search"
           className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/10"
@@ -59,15 +61,28 @@ export function CatalogHeader({
           </span>
         </Link>
 
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/10"
-          aria-label="Chat on WhatsApp"
-        >
-          <WhatsAppIcon className="h-5 w-5" />
-        </a>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/10"
+            aria-label="Chat on WhatsApp"
+          >
+            <WhatsAppIcon className="h-5 w-5" />
+          </a>
+          {instagramUrl ? (
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/10"
+              aria-label="Follow on Instagram"
+            >
+              <InstagramIcon className="h-5 w-5" />
+            </a>
+          ) : null}
+        </div>
       </div>
 
       {/* Desktop */}
@@ -106,6 +121,17 @@ export function CatalogHeader({
             <WhatsAppIcon className="h-4 w-4" />
             WhatsApp
           </a>
+          {instagramUrl ? (
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
+              aria-label="Follow on Instagram"
+            >
+              <InstagramIcon className="h-4 w-4" />
+            </a>
+          ) : null}
         </div>
       </div>
 

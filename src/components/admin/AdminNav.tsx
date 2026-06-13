@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "./LogoutButton";
+import { NavLink } from "./NavLink";
 
 interface AdminNavProps {
   role: "admin" | "sales";
@@ -15,6 +15,7 @@ const adminLinks = [
   { href: "/inventory", label: "Inventory" },
   { href: "/staff", label: "Staff" },
   { href: "/activity", label: "Activity" },
+  { href: "/settings", label: "Settings" },
 ];
 
 const salesLinks = [
@@ -39,17 +40,17 @@ export function AdminNav({ role }: AdminNavProps) {
               : pathname?.startsWith(link.href);
 
           return (
-            <Link
+            <NavLink
               key={link.href}
               href={link.href}
-              className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition sm:text-sm ${
+              className={`rounded-full px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition sm:text-sm ${
                 active
                   ? "bg-brand-navy text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 hover:text-brand-navy"
               }`}
             >
               {link.label}
-            </Link>
+            </NavLink>
           );
         })}
       </div>

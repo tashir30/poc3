@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { devActivatePaidPlan } from "@/lib/actions/billing";
+import { DevActivatePaidForm } from "@/components/billing/DevActivatePaidForm";
 import type { BusinessPlanId } from "@/lib/plans";
 import { PAID_PLAN_PRICE_INR } from "@/lib/plans";
 
@@ -25,14 +25,7 @@ export function UpgradePrompt({ message, plan }: UpgradePromptProps) {
         </Link>
         {process.env.NODE_ENV === "development" &&
         process.env.NEXT_PUBLIC_ELEVO_DEV_AUTH === "true" ? (
-          <form action={devActivatePaidPlan}>
-            <button
-              type="submit"
-              className="text-xs font-semibold uppercase tracking-wide text-emerald-700 hover:underline"
-            >
-              Dev: activate paid
-            </button>
-          </form>
+          <DevActivatePaidForm />
         ) : null}
       </div>
     </div>

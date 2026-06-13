@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminNav";
+import { DashboardStatLink } from "@/components/admin/DashboardStatLink";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { CatalogThemePicker } from "@/components/catalog/CatalogThemePicker";
 import { ShareCatalog } from "@/components/catalog/ShareCatalog";
@@ -134,27 +135,13 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {statCards.map((stat) => (
-            <Link key={stat.label} href={stat.href} className="group block">
-              <Card
-                className={`transition hover:border-brand-orange/40 hover:shadow-md ${
-                  stat.alert ? "border-brand-orange/30 bg-brand-orange/5" : ""
-                }`}
-              >
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-orange">
-                  {stat.label}
-                </p>
-                <p
-                  className={`font-display mt-1 text-3xl font-bold ${
-                    stat.alert ? "text-brand-orange" : "text-brand-navy"
-                  }`}
-                >
-                  {stat.value}
-                </p>
-                <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-slate-400 opacity-0 transition group-hover:opacity-100">
-                  View →
-                </p>
-              </Card>
-            </Link>
+            <DashboardStatLink
+              key={stat.label}
+              href={stat.href}
+              label={stat.label}
+              value={stat.value}
+              alert={stat.alert}
+            />
           ))}
         </div>
 
@@ -166,6 +153,14 @@ export default async function DashboardPage() {
             <p className="mt-1 text-sm text-slate-600">
               Share this link with customers — they browse and enquire on WhatsApp.
             </p>
+            {stats.profile.role === "admin" ? (
+              <Link
+                href="/settings"
+                className="mt-2 inline-block text-xs font-semibold uppercase tracking-wide text-brand-orange hover:underline"
+              >
+                Edit business profile →
+              </Link>
+            ) : null}
             <Link
               href={`/${stats.business.slug}`}
               target="_blank"
