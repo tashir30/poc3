@@ -17,11 +17,15 @@ interface PublicProductCardProps {
   selectionActive: boolean;
 }
 
+function isContactPrice(priceText: string): boolean {
+  return /contact/i.test(priceText.trim());
+}
+
 function ProductPlaceholder() {
   return (
-    <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-stone-100 via-stone-50 to-orange-50/40 text-stone-400">
+    <div className="flex h-full flex-col items-center justify-center bg-white text-stone-300">
       <svg
-        className="h-9 w-9 opacity-50"
+        className="h-9 w-9 opacity-60"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -53,23 +57,24 @@ export function PublicProductCard({
     whatsappNumber,
     buildProductEnquiryMessage(product.name, businessName, product.price_text),
   );
+  const contactPrice = isContactPrice(product.price_text);
 
   return (
     <article
-      className={`group flex flex-col overflow-hidden bg-white transition duration-300 md:catalog-card ${
+      className={`catalog-product-tile group flex flex-col overflow-hidden transition duration-200 ${
         selected
           ? "ring-2 ring-[var(--catalog-accent)] ring-offset-2 ring-offset-white md:ring-offset-[var(--catalog-bg)]"
           : ""
       }`}
     >
-      <div className="relative aspect-square overflow-hidden bg-stone-50 md:aspect-[4/3]">
+      <div className="relative aspect-square overflow-hidden bg-white md:aspect-[4/3]">
         <Link href={productPath} className="block h-full w-full">
           {product.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-contain p-2 transition duration-500 group-hover:scale-105 md:object-cover md:p-0"
+              className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.02] md:p-4"
             />
           ) : (
             <ProductPlaceholder />
@@ -77,13 +82,13 @@ export function PublicProductCard({
         </Link>
 
         {categoryName ? (
-          <span className="absolute left-2 top-2 hidden rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--catalog-ink)] shadow-sm backdrop-blur-sm md:left-3 md:top-3 md:inline md:px-2.5 md:py-1">
+          <span className="absolute left-2.5 top-2.5 max-w-[calc(100%-3rem)] truncate rounded-sm bg-[var(--catalog-ink)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white md:left-3 md:top-3">
             {categoryName}
           </span>
         ) : null}
 
         <label
-          className={`absolute right-2 top-2 flex cursor-pointer items-center rounded-full bg-white/95 p-1.5 shadow-sm backdrop-blur-sm transition md:right-3 md:top-3 md:gap-1.5 md:px-2 md:py-1.5 ${
+          className={`absolute right-2.5 top-2.5 flex cursor-pointer items-center rounded-sm border border-stone-200 bg-white p-1.5 transition md:right-3 md:top-3 md:gap-1.5 md:px-2 md:py-1.5 ${
             selectionActive || selected
               ? "opacity-100"
               : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
@@ -96,51 +101,54 @@ export function PublicProductCard({
             className="h-3.5 w-3.5 rounded border-stone-300 text-[var(--catalog-accent)] focus:ring-[var(--catalog-accent)]/30"
             aria-label={`Select ${product.name}`}
           />
-          <span className="hidden text-[10px] font-semibold text-[var(--catalog-ink)] md:inline">
+          <span className="hidden text-[10px] font-medium text-[var(--catalog-ink)] md:inline">
             Select
           </span>
         </label>
       </div>
 
-      <div className="flex flex-1 flex-col px-1 pb-2 pt-2 md:p-4">
-        <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-stone-900 md:text-base">
-          <Link href={productPath} className="hover:text-[var(--catalog-accent)]">
+      <div className="flex flex-1 flex-col border-t border-stone-100 p-3 md:p-4">
+        <h3 className="line-clamp-2 text-left text-base font-semibold leading-snug text-[var(--catalog-ink)] md:text-lg">
+          <Link
+            href={productPath}
+            className="hover:text-[var(--catalog-accent)]"
+          >
             {product.name}
           </Link>
         </h3>
-        <p className="mt-1 text-sm font-bold text-stone-900 md:mt-2 md:text-lg">
+
+        <p
+          className={`mt-1.5 text-left tabular-nums md:mt-2 ${
+            contactPrice
+              ? "text-xs font-medium text-[var(--catalog-muted)] md:text-sm"
+              : "text-sm font-bold text-[var(--catalog-ink)] md:text-base"
+          }`}
+        >
           {product.price_text}
         </p>
+
         {product.description ? (
-          <p className="mt-2 hidden line-clamp-2 text-xs leading-relaxed text-[var(--catalog-muted)] md:block">
+          <p className="mt-2 line-clamp-1 text-left text-xs leading-relaxed text-[var(--catalog-muted)]">
             {product.description}
           </p>
         ) : null}
 
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-flex w-full items-center justify-center bg-stone-200 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-stone-900 transition hover:bg-stone-300 md:hidden"
-        >
-          Enquire
-        </a>
-
-        <div className="mt-4 hidden gap-2 pt-1 md:flex">
+        <div className="mt-auto pt-3 md:pt-4">
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--catalog-wa)] text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--catalog-ink)] text-xs font-semibold uppercase tracking-wide text-white transition hover:opacity-90 md:min-h-11 md:text-sm"
           >
-            <WhatsAppIcon className="h-3.5 w-3.5" />
-            Enquire
+            <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" />
+            <span className="sm:hidden">Enquire</span>
+            <span className="hidden sm:inline">Enquire on WhatsApp</span>
           </a>
           <Link
             href={productPath}
-            className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border border-stone-200 bg-white text-sm font-semibold text-[var(--catalog-ink)] transition hover:border-[var(--catalog-accent)]/40 hover:text-[var(--catalog-accent)]"
+            className="mt-2 block text-center text-xs font-medium text-[var(--catalog-muted)] underline-offset-2 transition hover:text-[var(--catalog-accent)] hover:underline"
           >
-            View
+            View details
           </Link>
         </div>
       </div>

@@ -146,7 +146,7 @@ export function CatalogBrowser({
           ) : null}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-2 gap-y-4 px-2 pt-3 sm:gap-5 sm:px-0 sm:pt-0 lg:grid-cols-3 lg:gap-7">
+        <div className="grid grid-cols-2 gap-3 px-2 pt-3 sm:gap-5 sm:px-0 sm:pt-0 lg:grid-cols-3 lg:gap-6">
           {filtered.map((product) => (
             <PublicProductCard
               key={product.id}
