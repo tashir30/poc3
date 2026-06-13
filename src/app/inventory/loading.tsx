@@ -1,5 +1,5 @@
-import { AdminLoadingSkeleton } from "@/components/admin/AdminLoadingSkeleton";
+import { AdminListSkeleton } from "@/components/loading/AdminListSkeleton";
 
 export default function InventoryLoading() {
-  return <AdminLoadingSkeleton />;
+  return <AdminListSkeleton narrow rows={6} navCount={5} />;
 }

@@ -1,5 +1,5 @@
-import { AdminLoadingSkeleton } from "@/components/admin/AdminLoadingSkeleton";
+import { AdminFormListSkeleton } from "@/components/loading/AdminFormListSkeleton";
 
 export default function StaffLoading() {
-  return <AdminLoadingSkeleton />;
+  return <AdminFormListSkeleton formFields={3} listRows={3} />;
 }

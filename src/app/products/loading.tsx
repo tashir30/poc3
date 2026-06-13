@@ -1,5 +1,5 @@
-import { AdminLoadingSkeleton } from "@/components/admin/AdminLoadingSkeleton";
+import { AdminListSkeleton } from "@/components/loading/AdminListSkeleton";
 
 export default function ProductsLoading() {
-  return <AdminLoadingSkeleton />;
+  return <AdminListSkeleton showActionButton rows={6} />;
 }

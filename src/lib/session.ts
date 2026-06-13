@@ -1,11 +1,12 @@
 import "server-only";
 
+import { cache } from "react";
 import * as repo from "@/lib/db/repo";
 import { getSessionFromCookie } from "@/lib/auth/cookies";
-import type { Business, Profile, StaffAccount } from "@/types/database";
+import type { Business, Profile } from "@/types/database";
 import { redirect } from "next/navigation";
 
-export async function getSessionContext() {
+export const getSessionContext = cache(async () => {
   const session = await getSessionFromCookie();
 
   if (!session) {
@@ -19,25 +20,33 @@ export async function getSessionContext() {
   }
 
   if (session.accountType === "staff") {
-    const staff = session.staffId ? await repo.getStaffById(session.staffId) : null;
-    const business =
-      session.businessId && staff?.status === "active"
-        ? await repo.getBusinessById(session.businessId)
-        : null;
+    const [staff, business] = await Promise.all([
+      session.staffId ? repo.getStaffById(session.staffId) : Promise.resolve(null),
+      session.businessId
+        ? repo.getBusinessById(session.businessId)
+        : Promise.resolve(null),
+    ]);
 
     return {
       session,
       user: null,
       profile: null,
       staff,
-      business,
+      business: staff?.status === "active" ? business : null,
     };
   }
 
-  const profile = session.userId ? await repo.getProfileById(session.userId) : null;
-  const business = profile?.business_id
-    ? await repo.getBusinessById(profile.business_id)
-    : null;
+  const [profile, businessFromSession] = await Promise.all([
+    session.userId ? repo.getProfileById(session.userId) : Promise.resolve(null),
+    session.businessId
+      ? repo.getBusinessById(session.businessId)
+      : Promise.resolve(null),
+  ]);
+
+  let business = businessFromSession;
+  if (!business && profile?.business_id) {
+    business = await repo.getBusinessById(profile.business_id);
+  }
 
   return {
     session,
@@ -46,7 +55,7 @@ export async function getSessionContext() {
     staff: null,
     business: business as Business | null,
   };
-}
+});
 
 export async function requireBusinessContext() {
   const ctx = await getSessionContext();

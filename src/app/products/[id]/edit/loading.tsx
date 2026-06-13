@@ -1,5 +1,5 @@
 import { SettingsSkeleton } from "@/components/loading/SettingsSkeleton";
 
-export default function SettingsLoading() {
+export default function EditProductLoading() {
   return <SettingsSkeleton />;
 }

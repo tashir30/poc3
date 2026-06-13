@@ -1,5 +1,5 @@
-import { AdminLoadingSkeleton } from "@/components/admin/AdminLoadingSkeleton";
+import { AdminFormListSkeleton } from "@/components/loading/AdminFormListSkeleton";
 
 export default function CategoriesLoading() {
-  return <AdminLoadingSkeleton />;
+  return <AdminFormListSkeleton formFields={2} listRows={4} />;
 }

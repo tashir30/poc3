@@ -8,6 +8,7 @@ const MERCHANT_APP_PREFIXES = [
   "/inventory",
   "/staff",
   "/activity",
+  "/settings",
   "/account",
   "/onboarding",
 ];
@@ -19,6 +20,7 @@ const ADMIN_ONLY_PREFIXES = [
   "/products",
   "/categories",
   "/staff",
+  "/settings",
   "/account",
 ];
 

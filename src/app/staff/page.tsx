@@ -7,9 +7,11 @@ import { redirect } from "next/navigation";
 
 export default async function StaffPage() {
   const { business } = await requireMerchantAdmin();
-  const staff = await repo.listStaff(business.id);
   const limits = getPlanLimits(business.plan);
-  const activeCount = await repo.countStaff(business.id);
+  const [staff, activeCount] = await Promise.all([
+    repo.listStaff(business.id),
+    repo.countStaff(business.id),
+  ]);
 
   return (
     <AdminShell title="Staff" businessName={business.name} role="admin">
