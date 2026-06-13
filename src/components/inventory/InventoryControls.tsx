@@ -14,15 +14,25 @@ export function InventoryControls({
 }: InventoryControlsProps) {
   const [pending, startTransition] = useTransition();
   const [stockQuantity, setStockQuantity] = useState(initialStock);
+  const [error, setError] = useState("");
 
   function adjust(
     amount: number,
     actionType: "SALE" | "STOCK_ADDED" | "MANUAL_ADJUSTMENT",
   ) {
+    setError("");
     startTransition(async () => {
-      const result = await updateInventory(productId, amount, actionType);
-      if (result.ok && typeof result.stock === "number") {
-        setStockQuantity(result.stock);
+      try {
+        const result = await updateInventory(productId, amount, actionType);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        if (result.ok && typeof result.stock === "number") {
+          setStockQuantity(result.stock);
+        }
+      } catch {
+        setError("Could not update stock. Please try again.");
       }
     });
   }
@@ -38,6 +48,7 @@ export function InventoryControls({
           <span className="ml-2 text-xs font-medium text-slate-500">Updating...</span>
         ) : null}
       </p>
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="grid grid-cols-4 gap-2">
         <button
           type="button"

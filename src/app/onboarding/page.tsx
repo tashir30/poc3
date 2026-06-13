@@ -21,14 +21,18 @@ export default function OnboardingPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     setLoading(true);
     setError("");
 
-    const formData = new FormData(e.currentTarget);
-    const result = await createBusiness(formData);
-
-    if (result?.error) {
-      setError(result.error);
+    try {
+      const result = await createBusiness(formData);
+      if (result?.error) {
+        setError(result.error);
+      }
+    } catch {
+      setError("Could not create catalog. Please try again.");
+    } finally {
       setLoading(false);
     }
   }

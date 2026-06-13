@@ -37,13 +37,17 @@ export function CatalogThemePicker({
 
     setMessage(null);
     startTransition(async () => {
-      const result = await updateCatalogTheme(themeId);
-      if (result.error) {
-        setMessage(result.error);
-        return;
+      try {
+        const result = await updateCatalogTheme(themeId);
+        if (result.error) {
+          setMessage(result.error);
+          return;
+        }
+        setSelected(themeId);
+        setMessage("Theme updated — refresh your catalog tab to preview.");
+      } catch {
+        setMessage("Could not save theme. Please try again.");
       }
-      setSelected(themeId);
-      setMessage("Theme updated — refresh your catalog tab to preview.");
     });
   }
 

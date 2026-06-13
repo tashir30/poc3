@@ -286,15 +286,16 @@ export async function updateBusinessById(
   },
 ): Promise<boolean> {
   const sql = getPostgres();
-  const result = await sql`
+  const rows = await sql`
     UPDATE businesses
     SET name = ${data.name},
         whatsapp_number = ${data.whatsappNumber},
         description = ${data.description},
         instagram_url = ${data.instagramUrl}
     WHERE id = ${businessId}
+    RETURNING id
   `;
-  return result.count > 0;
+  return rows.length > 0;
 }
 
 export async function getCategoryById(

@@ -8,7 +8,7 @@ import { LIMITS } from "@/lib/constants";
 import { isValidCatalogTheme } from "@/lib/catalog-themes";
 import { getPlanLimits } from "@/lib/plans";
 import * as repo from "@/lib/db/repo";
-import { requireBusinessContext, requireMerchantAdmin } from "@/lib/session";
+import { requireMerchantAdmin, getActionAdminContext, getActionBusinessContext } from "@/lib/session";
 import { validateProductImageUrl } from "@/lib/security/urls";
 import {
   detectImageType,
@@ -94,7 +94,9 @@ export async function createBusiness(formData: FormData) {
 }
 
 export async function updateBusinessSettings(formData: FormData) {
-  const { business } = await requireAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business } = auth;
 
   const name = sanitizeText(formData.get("name")?.toString() ?? "", LIMITS.businessNameMax);
   const whatsapp = normalizePhone(formData.get("whatsapp_number")?.toString() ?? "");
@@ -113,15 +115,19 @@ export async function updateBusinessSettings(formData: FormData) {
     return { error: "Enter a valid Instagram handle or profile URL" };
   }
 
-  if (
-    !(await repo.updateBusinessById(business.id, {
-      name,
-      whatsappNumber: whatsapp,
-      description: description || null,
-      instagramUrl,
-    }))
-  ) {
-    return { error: "Failed to update business profile" };
+  try {
+    if (
+      !(await repo.updateBusinessById(business.id, {
+        name,
+        whatsappNumber: whatsapp,
+        description: description || null,
+        instagramUrl,
+      }))
+    ) {
+      return { error: "Failed to update business profile" };
+    }
+  } catch {
+    return { error: "Could not save changes. Try again in a moment." };
   }
 
   revalidateBusinessPaths(business.slug);
@@ -168,7 +174,9 @@ export async function deleteCategory(categoryId: string): Promise<void> {
 }
 
 export async function createProduct(formData: FormData) {
-  const { business } = await requireAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business } = auth;
 
   const limits = getPlanLimits(business.plan);
   if ((await repo.countProducts(business.id)) >= limits.maxProducts) {
@@ -215,7 +223,9 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(productId: string, formData: FormData) {
-  const { business } = await requireAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business } = auth;
 
   const name = sanitizeText(formData.get("name")?.toString() ?? "", LIMITS.productNameMax);
   const description = sanitizeText(
@@ -267,7 +277,9 @@ export async function deleteProduct(productId: string): Promise<void> {
 }
 
 export async function uploadProductImage(formData: FormData) {
-  const { business } = await requireAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business } = auth;
 
   const file = formData.get("file") as File | null;
   if (!file || file.size === 0) {
@@ -294,9 +306,11 @@ export async function updateInventory(
   changeAmount: number,
   actionType: "SALE" | "STOCK_ADDED" | "MANUAL_ADJUSTMENT",
 ) {
-  const ctx = await requireBusinessContext();
-  const limits = getPlanLimits(ctx.business.plan);
-  const activityToday = await repo.countDailyActivity(ctx.business.id);
+  const auth = await getActionBusinessContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business, session } = auth;
+  const limits = getPlanLimits(business.plan);
+  const activityToday = await repo.countDailyActivity(business.id);
 
   if (activityToday >= limits.maxDailyActivity) {
     return {
@@ -305,22 +319,21 @@ export async function updateInventory(
     };
   }
 
-  const product = await repo.getProductStock(productId, ctx.business.id);
+  const product = await repo.getProductStock(productId, business.id);
 
   if (!product) return { error: "Product not found" };
 
   const newStock = Math.max(0, product.stock_quantity + changeAmount);
 
-  if (!(await repo.updateProductStock(productId, ctx.business.id, newStock))) {
+  if (!(await repo.updateProductStock(productId, business.id, newStock))) {
     return { error: "Failed to update stock" };
   }
 
   await repo.insertInventoryLog({
     productId,
-    userId:
-      ctx.session.accountType === "merchant" ? ctx.session.userId ?? null : null,
+    userId: session.accountType === "merchant" ? session.userId ?? null : null,
     staffAccountId:
-      ctx.session.accountType === "staff" ? ctx.session.staffId ?? null : null,
+      session.accountType === "staff" ? session.staffId ?? null : null,
     changeAmount,
     actionType,
   });
@@ -332,14 +345,15 @@ export async function updateInventory(
 }
 
 export async function updateCatalogTheme(themeId: string) {
-  const ctx = await requireAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
 
   if (!isValidCatalogTheme(themeId)) {
     return { error: "Invalid catalog theme" };
   }
 
-  await repo.updateBusinessCatalogTheme(ctx.business.id, themeId);
-  revalidateBusinessPaths(ctx.business.slug);
+  await repo.updateBusinessCatalogTheme(auth.business.id, themeId);
+  revalidateBusinessPaths(auth.business.slug);
 
   return { ok: true, themeId };
 }

@@ -133,3 +133,70 @@ export async function requirePlatformAdmin() {
   }
   return ctx;
 }
+
+type ActionError = { ok: false; error: string };
+
+type ActionBusinessContext = {
+  ok: true;
+  session: NonNullable<Awaited<ReturnType<typeof getSessionContext>>["session"]>;
+  business: Business;
+  profile: Profile;
+  staff: import("@/types/database").StaffAccount | null;
+};
+
+/** Auth for client-invoked server actions — returns errors instead of redirect (avoids hung UI). */
+export async function getActionBusinessContext(): Promise<
+  ActionBusinessContext | ActionError
+> {
+  const ctx = await getSessionContext();
+  if (!ctx.session) {
+    return { ok: false, error: "Please sign in again" };
+  }
+  if (!ctx.business) {
+    return { ok: false, error: "Business not found. Complete setup first." };
+  }
+
+  if (ctx.session.accountType === "staff") {
+    if (!ctx.staff || ctx.staff.status !== "active") {
+      return { ok: false, error: "Staff access denied" };
+    }
+    const syntheticProfile: Profile = {
+      id: ctx.staff.id,
+      phone: ctx.staff.contact_phone,
+      name: ctx.staff.name,
+      role: "sales",
+      business_id: ctx.business.id,
+      created_at: ctx.staff.created_at,
+    };
+    return {
+      ok: true,
+      session: ctx.session,
+      business: ctx.business,
+      profile: syntheticProfile,
+      staff: ctx.staff,
+    };
+  }
+
+  if (!ctx.profile) {
+    return { ok: false, error: "Complete business setup first." };
+  }
+
+  return {
+    ok: true,
+    session: ctx.session,
+    business: ctx.business,
+    profile: ctx.profile,
+    staff: null,
+  };
+}
+
+export async function getActionAdminContext(): Promise<
+  ActionBusinessContext | ActionError
+> {
+  const ctx = await getActionBusinessContext();
+  if (!ctx.ok) return ctx;
+  if (ctx.session.accountType !== "merchant" || ctx.profile.role !== "admin") {
+    return { ok: false, error: "Admin access required" };
+  }
+  return ctx;
+}

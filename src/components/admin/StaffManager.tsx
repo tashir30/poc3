@@ -28,17 +28,21 @@ export function StaffManager({ staff, maxStaff, activeCount }: StaffManagerProps
     setError("");
     setCredentials(null);
     startTransition(async () => {
-      const result = await createStaffAccount(formData);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      if (result.ok && result.username && result.whatsappUrl) {
-        setCredentials({
-          username: result.username,
-          whatsappUrl: result.whatsappUrl,
-        });
-        window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
+      try {
+        const result = await createStaffAccount(formData);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        if (result.ok && result.username && result.whatsappUrl) {
+          setCredentials({
+            username: result.username,
+            whatsappUrl: result.whatsappUrl,
+          });
+          window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
+        }
+      } catch {
+        setError("Could not create staff login. Please try again.");
       }
     });
   }
@@ -137,13 +141,21 @@ export function StaffManager({ staff, maxStaff, activeCount }: StaffManagerProps
                 disabled={pending}
                 onClick={() =>
                   startTransition(async () => {
-                    const result = await resetStaffMemberPassword(member.id);
-                    if (result.ok && result.whatsappUrl) {
-                      setCredentials({
-                        username: member.username,
-                        whatsappUrl: result.whatsappUrl,
-                      });
-                      window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
+                    try {
+                      const result = await resetStaffMemberPassword(member.id);
+                      if (result.error) {
+                        setError(result.error);
+                        return;
+                      }
+                      if (result.ok && result.whatsappUrl) {
+                        setCredentials({
+                          username: member.username,
+                          whatsappUrl: result.whatsappUrl,
+                        });
+                        window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
+                      }
+                    } catch {
+                      setError("Could not reset password. Please try again.");
                     }
                   })
                 }

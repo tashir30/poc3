@@ -9,12 +9,14 @@ import {
 } from "@/lib/auth/password";
 import { getPlanLimits } from "@/lib/plans";
 import * as repo from "@/lib/db/repo";
-import { requireMerchantAdmin } from "@/lib/session";
+import { getActionAdminContext, requireMerchantAdmin } from "@/lib/session";
 import { buildWhatsAppUrl } from "@/lib/validation";
 import { normalizePhone, sanitizeText } from "@/lib/validation";
 
 export async function createStaffAccount(formData: FormData) {
-  const { business } = await requireMerchantAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business } = auth;
   const limits = getPlanLimits(business.plan);
 
   if ((await repo.countStaff(business.id)) >= limits.maxStaff) {
@@ -82,7 +84,9 @@ export async function deleteStaffMember(staffId: string): Promise<void> {
 }
 
 export async function resetStaffMemberPassword(staffId: string) {
-  const { business } = await requireMerchantAdmin();
+  const auth = await getActionAdminContext();
+  if (!auth.ok) return { error: auth.error };
+  const { business } = auth;
   const staff = await repo.getStaffById(staffId);
   if (!staff || staff.business_id !== business.id) {
     return { error: "Staff member not found" };

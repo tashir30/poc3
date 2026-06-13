@@ -32,22 +32,26 @@ export function BusinessSettingsForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     setLoading(true);
     setError("");
     setSuccess("");
 
-    const formData = new FormData(e.currentTarget);
-    const result = await updateBusinessSettings(formData);
+    try {
+      const result = await updateBusinessSettings(formData);
 
-    if (result?.error) {
-      setError(result.error);
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+
+      setSuccess("Business profile updated.");
+      router.refresh();
+    } catch {
+      setError("Could not save changes. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setSuccess("Business profile updated.");
-    setLoading(false);
-    router.refresh();
   }
 
   return (

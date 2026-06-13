@@ -289,7 +289,7 @@ export function updateBusinessById(
     instagramUrl: string | null;
   },
 ): boolean {
-  const result = getDb()
+  getDb()
     .prepare(
       `UPDATE businesses
        SET name = ?, whatsapp_number = ?, description = ?, instagram_url = ?
@@ -302,7 +302,7 @@ export function updateBusinessById(
       data.instagramUrl,
       businessId,
     );
-  return result.changes > 0;
+  return !!getBusinessById(businessId);
 }
 
 export function getCategoryById(

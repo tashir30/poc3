@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { createProduct, uploadProductImage } from "@/lib/actions/catalog";
 import { AdminShell } from "@/components/admin/AdminNav";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui/Form";
@@ -37,29 +38,39 @@ export function ProductForm({
 
     setUploading(true);
     setError("");
-    const formData = new FormData();
-    formData.append("file", file);
-    const result = await uploadProductImage(formData);
-    setUploading(false);
-
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await uploadProductImage(formData);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      if (result.url) setImageUrl(result.url);
+    } catch {
+      setError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
     }
-    if (result.url) setImageUrl(result.url);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
     const formData = new FormData(e.currentTarget);
     if (imageUrl) formData.set("image_url", imageUrl);
 
-    const result = await action(formData);
-    if (result?.error) {
-      setError(result.error);
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await action(formData);
+      if (result?.error) {
+        setError(result.error);
+      }
+    } catch (err) {
+      if (isRedirectError(err)) throw err;
+      setError("Could not save product. Please try again.");
+    } finally {
       setLoading(false);
     }
   }
