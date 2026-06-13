@@ -39,7 +39,7 @@ function CatalogProductGridSkeleton() {
     <div className="grid grid-cols-2 gap-x-2 gap-y-4 px-2 pt-3 sm:gap-5 sm:px-0 sm:pt-0 lg:grid-cols-3 lg:gap-7">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
-          <SkeletonBlock className="aspect-square w-full rounded-none" />
+          <SkeletonBlock className="aspect-[4/5] w-full rounded-none" />
           <div className="space-y-2 p-3">
             <SkeletonBlock className="h-3 w-16" />
             <SkeletonBlock className="h-4 w-full" />

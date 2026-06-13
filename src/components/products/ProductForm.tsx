@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { createProduct, uploadProductImage } from "@/lib/actions/catalog";
+import { LIMITS } from "@/lib/constants";
 import { AdminShell } from "@/components/admin/AdminNav";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui/Form";
 
@@ -16,9 +17,20 @@ interface ProductFormProps {
     price_text: string;
     category_id: string | null;
     image_url: string | null;
+    image_urls?: string[];
     active: boolean;
   };
   action: (formData: FormData) => Promise<{ error?: string } | void>;
+}
+
+function initialImageUrls(initial?: ProductFormProps["initial"]): string[] {
+  if (initial?.image_urls && initial.image_urls.length > 0) {
+    return initial.image_urls;
+  }
+  if (initial?.image_url) {
+    return [initial.image_url];
+  }
+  return [];
 }
 
 export function ProductForm({
@@ -27,37 +39,68 @@ export function ProductForm({
   initial,
   action,
 }: ProductFormProps) {
-  const [imageUrl, setImageUrl] = useState(initial?.image_url ?? "");
+  const [imageUrls, setImageUrls] = useState<string[]>(() =>
+    initialImageUrls(initial),
+  );
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const remaining = LIMITS.maxProductImages - imageUrls.length;
+    if (remaining <= 0) {
+      setError(`You can add up to ${LIMITS.maxProductImages} images per product.`);
+      e.target.value = "";
+      return;
+    }
 
     setUploading(true);
     setError("");
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const result = await uploadProductImage(formData);
-      if (result.error) {
-        setError(result.error);
-        return;
+      const uploaded: string[] = [];
+      for (const file of Array.from(files).slice(0, remaining)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const result = await uploadProductImage(formData);
+        if (result.error) {
+          setError(result.error);
+          break;
+        }
+        if (result.url) uploaded.push(result.url);
       }
-      if (result.url) setImageUrl(result.url);
+      if (uploaded.length > 0) {
+        setImageUrls((prev) => [...prev, ...uploaded].slice(0, LIMITS.maxProductImages));
+      }
     } catch {
       setError("Upload failed. Please try again.");
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
+  }
+
+  function removeImage(index: number) {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function moveImage(index: number, direction: -1 | 1) {
+    setImageUrls((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    if (imageUrl) formData.set("image_url", imageUrl);
+    formData.set("image_urls", JSON.stringify(imageUrls));
 
     setLoading(true);
     setError("");
@@ -120,21 +163,68 @@ export function ProductForm({
             </select>
           </div>
           <div>
-            <Label>Product image</Label>
+            <Label>
+              Product images ({imageUrls.length}/{LIMITS.maxProductImages})
+            </Label>
+            <p className="mb-2 text-xs text-slate-500">
+              First image is the catalog cover. JPEG, PNG, or WebP up to 2MB each.
+            </p>
             <Input
               type="file"
               accept="image/jpeg,image/png,image/webp"
+              multiple
+              disabled={uploading || imageUrls.length >= LIMITS.maxProductImages}
               onChange={handleImageChange}
             />
-            {uploading && <p className="text-sm text-slate-500">Uploading...</p>}
-            {imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={imageUrl}
-                alt="Preview"
-                className="mt-2 h-40 w-full rounded-xl object-cover"
-              />
-            )}
+            {uploading ? <p className="mt-2 text-sm text-slate-500">Uploading...</p> : null}
+            {imageUrls.length > 0 ? (
+              <ul className="mt-3 space-y-2">
+                {imageUrls.map((url, index) => (
+                  <li
+                    key={`${url}-${index}`}
+                    className="flex items-center gap-3 rounded-xl border border-slate-200 p-2"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-slate-700">
+                        {index === 0 ? "Cover image" : `Image ${index + 1}`}
+                      </p>
+                      <p className="truncate text-[11px] text-slate-500">{url}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, -1)}
+                        disabled={index === 0}
+                        className="rounded border border-slate-200 px-2 py-0.5 text-xs disabled:opacity-40"
+                      >
+                        Up
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, 1)}
+                        disabled={index === imageUrls.length - 1}
+                        className="rounded border border-slate-200 px-2 py-0.5 text-xs disabled:opacity-40"
+                      >
+                        Down
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="rounded border border-red-200 px-2 py-0.5 text-xs text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input

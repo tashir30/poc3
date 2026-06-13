@@ -20,6 +20,7 @@ export const LIMITS = {
   imageMaxBytes: 2 * 1024 * 1024,
   allowedImageTypes: ["image/jpeg", "image/png", "image/webp"] as const,
   maxEnquiryProducts: 20,
+  maxProductImages: 5,
   maxWhatsAppUrlLength: 1800,
   instagramUrlMax: 200,
 } as const;

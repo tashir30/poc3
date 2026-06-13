@@ -103,6 +103,7 @@ export interface PublicProduct {
   name: string;
   description: string | null;
   image_url: string | null;
+  image_urls: string[];
   price_text: string;
   active: boolean;
   created_at: string;

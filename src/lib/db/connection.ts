@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS product_images (
+  id TEXT PRIMARY KEY,
+  product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_product_images_product ON product_images(product_id, sort_order);
+
 CREATE TABLE IF NOT EXISTS inventory_logs (
   id TEXT PRIMARY KEY,
   product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -280,6 +290,19 @@ function runMigrations(database: Database.Database): void {
         payload_hash TEXT NOT NULL,
         processed_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+    `);
+  }
+
+  if (!tableExists(database, "product_images")) {
+    database.exec(`
+      CREATE TABLE product_images (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        image_url TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_product_images_product ON product_images(product_id, sort_order);
     `);
   }
 

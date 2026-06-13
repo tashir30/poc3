@@ -62,10 +62,20 @@ function mapProduct(row: ProductRow): Product {
   return { ...row, active: boolFromDb(row.active) };
 }
 
-function mapPublicProduct(row: ProductRow): PublicProduct {
+function mapPublicProduct(row: ProductRow, imageUrls?: string[]): PublicProduct {
   const product = mapProduct(row);
-  const { stock_quantity: _stock, ...publicProduct } = product;
-  return publicProduct;
+  const { stock_quantity: _stock, ...publicFields } = product;
+  const urls =
+    imageUrls && imageUrls.length > 0
+      ? imageUrls
+      : product.image_url
+        ? [product.image_url]
+        : [];
+  return {
+    ...publicFields,
+    image_url: urls[0] ?? null,
+    image_urls: urls,
+  };
 }
 
 export function insertOtpRequest(
@@ -419,9 +429,11 @@ export function insertProduct(data: {
   name: string;
   description: string | null;
   priceText: string;
-  imageUrl: string | null;
+  imageUrls: string[];
   active: boolean;
-}): void {
+}): string {
+  const productId = newId();
+  const primaryImage = data.imageUrls[0] ?? null;
   getDb()
     .prepare(
       `INSERT INTO products
@@ -429,15 +441,17 @@ export function insertProduct(data: {
        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
     )
     .run(
-      newId(),
+      productId,
       data.businessId,
       data.categoryId,
       data.name,
       data.description,
-      data.imageUrl,
+      primaryImage,
       data.priceText,
       data.active ? 1 : 0,
     );
+  setProductImageUrls(productId, data.businessId, data.imageUrls);
+  return productId;
 }
 
 export function updateProductById(
@@ -448,10 +462,11 @@ export function updateProductById(
     description: string | null;
     priceText: string;
     categoryId: string | null;
-    imageUrl: string | null;
+    imageUrls: string[];
     active: boolean;
   },
 ): boolean {
+  const primaryImage = data.imageUrls[0] ?? null;
   const result = getDb()
     .prepare(
       `UPDATE products
@@ -463,12 +478,14 @@ export function updateProductById(
       data.description,
       data.priceText,
       data.categoryId,
-      data.imageUrl,
+      primaryImage,
       data.active ? 1 : 0,
       productId,
       businessId,
     );
-  return result.changes > 0;
+  if (result.changes === 0) return false;
+  setProductImageUrls(productId, businessId, data.imageUrls);
+  return true;
 }
 
 export function deleteProductById(
@@ -481,6 +498,44 @@ export function deleteProductById(
   return result.changes > 0;
 }
 
+export function listProductImageUrls(productId: string): string[] {
+  const rows = getDb()
+    .prepare(
+      `SELECT image_url FROM product_images
+       WHERE product_id = ? ORDER BY sort_order ASC, created_at ASC`,
+    )
+    .all(productId) as { image_url: string }[];
+  return rows.map((row) => row.image_url);
+}
+
+export function setProductImageUrls(
+  productId: string,
+  businessId: string,
+  imageUrls: string[],
+): boolean {
+  const db = getDb();
+  const owned = db
+    .prepare(`SELECT id FROM products WHERE id = ? AND business_id = ?`)
+    .get(productId, businessId) as { id: string } | undefined;
+  if (!owned) return false;
+
+  const primaryImage = imageUrls[0] ?? null;
+  const sync = db.transaction(() => {
+    db.prepare(`DELETE FROM product_images WHERE product_id = ?`).run(productId);
+    const insert = db.prepare(
+      `INSERT INTO product_images (id, product_id, image_url, sort_order) VALUES (?, ?, ?, ?)`,
+    );
+    imageUrls.forEach((url, index) => {
+      insert.run(newId(), productId, url, index);
+    });
+    db.prepare(
+      `UPDATE products SET image_url = ?, updated_at = datetime('now') WHERE id = ? AND business_id = ?`,
+    ).run(primaryImage, productId, businessId);
+  });
+  sync();
+  return true;
+}
+
 export function listPublicProducts(businessId: string): PublicProduct[] {
   const rows = getDb()
     .prepare(
@@ -488,7 +543,7 @@ export function listPublicProducts(businessId: string): PublicProduct[] {
        FROM products WHERE business_id = ? AND active = 1 ORDER BY name ASC`,
     )
     .all(businessId) as ProductRow[];
-  return rows.map(mapPublicProduct);
+  return rows.map((row) => mapPublicProduct(row));
 }
 
 export function getPublicProduct(
@@ -501,7 +556,8 @@ export function getPublicProduct(
        FROM products WHERE id = ? AND business_id = ? AND active = 1`,
     )
     .get(productId, businessId) as ProductRow | undefined;
-  return row ? mapPublicProduct(row) : null;
+  if (!row) return null;
+  return mapPublicProduct(row, listProductImageUrls(productId));
 }
 
 export function updateProductStock(

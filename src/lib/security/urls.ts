@@ -44,3 +44,17 @@ export function validateProductImageUrl(
 
   return null;
 }
+
+export function validateProductImageUrls(
+  imageUrls: string[],
+  businessId: string,
+  maxCount: number,
+): string[] {
+  const validated: string[] = [];
+  for (const raw of imageUrls) {
+    if (validated.length >= maxCount) break;
+    const url = validateProductImageUrl(raw, businessId);
+    if (url) validated.push(url);
+  }
+  return validated;
+}

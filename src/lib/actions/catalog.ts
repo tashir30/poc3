@@ -10,7 +10,7 @@ import { getPlanLimits } from "@/lib/plans";
 import * as repo from "@/lib/db/repo";
 import { mapSaveError } from "@/lib/db/save-error";
 import { requireMerchantAdmin, getActionAdminContext, getActionBusinessContext } from "@/lib/session";
-import { validateProductImageUrl } from "@/lib/security/urls";
+import { validateProductImageUrls } from "@/lib/security/urls";
 import {
   detectImageType,
 } from "@/lib/security/image";
@@ -40,6 +40,18 @@ function revalidateBusinessPaths(businessSlug: string) {
   revalidatePath("/dashboard");
   revalidatePath("/settings");
   revalidatePath(`/${businessSlug}`);
+}
+
+function parseProductImageUrls(formData: FormData, businessId: string): string[] {
+  const raw = formData.get("image_urls")?.toString() ?? "[]";
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const urls = parsed.filter((value): value is string => typeof value === "string");
+    return validateProductImageUrls(urls, businessId, LIMITS.maxProductImages);
+  } catch {
+    return [];
+  }
 }
 
 export async function createBusiness(formData: FormData) {
@@ -197,10 +209,7 @@ export async function createProduct(formData: FormData) {
     LIMITS.priceTextMax,
   );
   const categoryId = formData.get("category_id")?.toString() || null;
-  const imageUrl = validateProductImageUrl(
-    formData.get("image_url")?.toString() || null,
-    business.id,
-  );
+  const imageUrls = parseProductImageUrls(formData, business.id);
 
   if (!name) return { error: "Product name is required" };
 
@@ -216,7 +225,7 @@ export async function createProduct(formData: FormData) {
     name,
     description: description || null,
     priceText,
-    imageUrl,
+    imageUrls,
     active,
   });
 
@@ -239,10 +248,7 @@ export async function updateProduct(productId: string, formData: FormData) {
     LIMITS.priceTextMax,
   );
   const categoryId = formData.get("category_id")?.toString() || null;
-  const imageUrl = validateProductImageUrl(
-    formData.get("image_url")?.toString() || null,
-    business.id,
-  );
+  const imageUrls = parseProductImageUrls(formData, business.id);
   const active = formData.get("active") === "on";
 
   if (!name || !priceText) return { error: "Name and price are required" };
@@ -257,7 +263,7 @@ export async function updateProduct(productId: string, formData: FormData) {
       description: description || null,
       priceText,
       categoryId,
-      imageUrl,
+      imageUrls,
       active,
     }))
   ) {

@@ -67,14 +67,14 @@ export function PublicProductCard({
           : ""
       }`}
     >
-      <div className="relative aspect-square overflow-hidden bg-white md:aspect-[4/3]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-white">
         <Link href={productPath} className="block h-full w-full">
           {product.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.02] md:p-4"
+              className="h-full w-full object-contain p-1.5 transition duration-500 group-hover:scale-[1.02] sm:p-2"
             />
           ) : (
             <ProductPlaceholder />
@@ -127,13 +127,7 @@ export function PublicProductCard({
           {product.price_text}
         </p>
 
-        {product.description ? (
-          <p className="mt-2 line-clamp-1 text-left text-xs leading-relaxed text-[var(--catalog-muted)]">
-            {product.description}
-          </p>
-        ) : null}
-
-        <div className="mt-auto pt-3 md:pt-4">
+        <div className="mt-auto pt-3 md:pt-3">
           <a
             href={whatsappUrl}
             target="_blank"

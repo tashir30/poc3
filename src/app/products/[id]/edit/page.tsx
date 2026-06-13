@@ -18,11 +18,19 @@ export default async function EditProductPage({
 
   if (!product) notFound();
 
+  const storedImages = await repo.listProductImageUrls(id);
+  const imageUrls =
+    storedImages.length > 0
+      ? storedImages
+      : product.image_url
+        ? [product.image_url]
+        : [];
+
   return (
     <ProductForm
       categories={categories.map((c) => ({ id: c.id, name: c.name }))}
       businessName={business.name}
-      initial={product}
+      initial={{ ...product, image_urls: imageUrls }}
       action={updateProduct.bind(null, id)}
     />
   );

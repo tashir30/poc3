@@ -260,6 +260,13 @@ export async function deleteProductById(
   return impl.deleteProductById(...args);
 }
 
+export async function listProductImageUrls(
+  ...args: Parameters<(typeof import("./sqlite-repo"))["listProductImageUrls"]>
+) {
+  const impl = await getBackendRepo();
+  return impl.listProductImageUrls(...args);
+}
+
 export async function listPublicProducts(
   ...args: Parameters<(typeof import("./sqlite-repo"))["listPublicProducts"]>
 ) {

@@ -29,6 +29,7 @@ function castRows<T>(rows: unknown): T {
 type ProductRow = Product & { active: number | boolean };
 
 let businessInstagramColumnReady = false;
+let productImagesTableReady = false;
 
 async function ensureBusinessInstagramColumn(
   sql: ReturnType<typeof getPostgres>,
@@ -36,6 +37,26 @@ async function ensureBusinessInstagramColumn(
   if (businessInstagramColumnReady) return;
   await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS instagram_url TEXT`;
   businessInstagramColumnReady = true;
+}
+
+async function ensureProductImagesTable(
+  sql: ReturnType<typeof getPostgres>,
+): Promise<void> {
+  if (productImagesTableReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS product_images (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      image_url TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_product_images_product
+    ON product_images(product_id, sort_order)
+  `;
+  productImagesTableReady = true;
 }
 
 type UserRow = User & {
@@ -80,10 +101,20 @@ function mapProduct(row: ProductRow): Product {
   return { ...row, active: boolFromDb(row.active) };
 }
 
-function mapPublicProduct(row: ProductRow): PublicProduct {
+function mapPublicProduct(row: ProductRow, imageUrls?: string[]): PublicProduct {
   const product = mapProduct(row);
-  const { stock_quantity: _stock, ...publicProduct } = product;
-  return publicProduct;
+  const { stock_quantity: _stock, ...publicFields } = product;
+  const urls =
+    imageUrls && imageUrls.length > 0
+      ? imageUrls
+      : product.image_url
+        ? [product.image_url]
+        : [];
+  return {
+    ...publicFields,
+    image_url: urls[0] ?? null,
+    image_urls: urls,
+  };
 }
 
 export async function insertOtpRequest(
@@ -416,15 +447,20 @@ export async function insertProduct(data: {
   name: string;
   description: string | null;
   priceText: string;
-  imageUrl: string | null;
+  imageUrls: string[];
   active: boolean;
-}): Promise<void> {
+}): Promise<string> {
   const sql = getPostgres();
+  await ensureProductImagesTable(sql);
+  const productId = newId();
+  const primaryImage = data.imageUrls[0] ?? null;
   await sql`
     INSERT INTO products
       (id, business_id, category_id, name, description, image_url, price_text, stock_quantity, active)
-    VALUES (${newId()}, ${data.businessId}, ${data.categoryId}, ${data.name}, ${data.description}, ${data.imageUrl}, ${data.priceText}, 0, ${data.active})
+    VALUES (${productId}, ${data.businessId}, ${data.categoryId}, ${data.name}, ${data.description}, ${primaryImage}, ${data.priceText}, 0, ${data.active})
   `;
+  await setProductImageUrls(productId, data.businessId, data.imageUrls);
+  return productId;
 }
 
 export async function updateProductById(
@@ -435,23 +471,27 @@ export async function updateProductById(
     description: string | null;
     priceText: string;
     categoryId: string | null;
-    imageUrl: string | null;
+    imageUrls: string[];
     active: boolean;
   },
 ): Promise<boolean> {
   const sql = getPostgres();
+  await ensureProductImagesTable(sql);
+  const primaryImage = data.imageUrls[0] ?? null;
   const result = await sql`
     UPDATE products
     SET name = ${data.name},
         description = ${data.description},
         price_text = ${data.priceText},
         category_id = ${data.categoryId},
-        image_url = ${data.imageUrl},
+        image_url = ${primaryImage},
         active = ${data.active},
         updated_at = now()
     WHERE id = ${productId} AND business_id = ${businessId}
   `;
-  return result.count > 0;
+  if (result.count === 0) return false;
+  await setProductImageUrls(productId, businessId, data.imageUrls);
+  return true;
 }
 
 export async function deleteProductById(
@@ -465,13 +505,52 @@ export async function deleteProductById(
   return result.count > 0;
 }
 
+export async function listProductImageUrls(productId: string): Promise<string[]> {
+  const sql = getPostgres();
+  await ensureProductImagesTable(sql);
+  const rows = await sql`
+    SELECT image_url FROM product_images
+    WHERE product_id = ${productId}
+    ORDER BY sort_order ASC, created_at ASC
+  `;
+  return castRows<{ image_url: string }[]>(rows).map((row) => row.image_url);
+}
+
+export async function setProductImageUrls(
+  productId: string,
+  businessId: string,
+  imageUrls: string[],
+): Promise<boolean> {
+  const sql = getPostgres();
+  await ensureProductImagesTable(sql);
+  const owned = await sql`
+    SELECT id FROM products WHERE id = ${productId} AND business_id = ${businessId}
+  `;
+  if (owned.length === 0) return false;
+
+  const primaryImage = imageUrls[0] ?? null;
+  await sql`DELETE FROM product_images WHERE product_id = ${productId}`;
+  for (let index = 0; index < imageUrls.length; index += 1) {
+    await sql`
+      INSERT INTO product_images (id, product_id, image_url, sort_order)
+      VALUES (${newId()}, ${productId}, ${imageUrls[index]}, ${index})
+    `;
+  }
+  await sql`
+    UPDATE products
+    SET image_url = ${primaryImage}, updated_at = now()
+    WHERE id = ${productId} AND business_id = ${businessId}
+  `;
+  return true;
+}
+
 export async function listPublicProducts(businessId: string): Promise<PublicProduct[]> {
   const sql = getPostgres();
   const rows = await sql`
     SELECT id, business_id, category_id, name, description, image_url, price_text, active, created_at, updated_at
     FROM products WHERE business_id = ${businessId} AND active = true ORDER BY name ASC
   `;
-  return castRows<ProductRow[]>(rows).map(mapPublicProduct);
+  return castRows<ProductRow[]>(rows).map((row) => mapPublicProduct(row));
 }
 
 export async function getPublicProduct(
@@ -484,7 +563,9 @@ export async function getPublicProduct(
     FROM products WHERE id = ${productId} AND business_id = ${businessId} AND active = true
   `;
   const row = rows[0] as ProductRow | undefined;
-  return row ? mapPublicProduct(row) : null;
+  if (!row) return null;
+  const imageUrls = await listProductImageUrls(productId);
+  return mapPublicProduct(row, imageUrls);
 }
 
 export async function updateProductStock(
@@ -949,7 +1030,7 @@ export async function getCatalogPageBySlug(slug: string): Promise<{
 
   return {
     business: mapBusiness(row),
-    products: castRows<ProductRow[]>(productsRaw).map(mapPublicProduct),
+    products: castRows<ProductRow[]>(productsRaw).map((row) => mapPublicProduct(row)),
     categories: castRows<Category[]>(categoriesRaw),
   };
 }
@@ -1011,6 +1092,7 @@ export async function getPublicProductPageBySlug(
   if (!row) return null;
 
   const business = mapBusiness(row);
+  const imageUrls = await listProductImageUrls(row.p_id);
   const product = mapPublicProduct(
     mapProduct({
       id: row.p_id,
@@ -1025,6 +1107,7 @@ export async function getPublicProductPageBySlug(
       updated_at: row.p_updated_at,
       stock_quantity: 0,
     } as ProductRow),
+    imageUrls,
   );
 
   const category =

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as repo from "@/lib/db/repo";
 import { CatalogShell } from "@/components/catalog/CatalogShell";
+import { ProductImageGallery } from "@/components/catalog/ProductImageGallery";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import { buildProductEnquiryMessage, buildWhatsAppUrl } from "@/lib/validation";
 
@@ -43,20 +44,10 @@ export default async function ProductDetailPage({
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <div className="catalog-card overflow-hidden">
-            {product.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="aspect-square w-full object-cover lg:aspect-[4/3]"
-              />
-            ) : (
-              <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-stone-100 to-orange-50/30 text-stone-400 lg:aspect-[4/3]">
-                No photo available
-              </div>
-            )}
-          </div>
+          <ProductImageGallery
+            images={product.image_urls}
+            alt={product.name}
+          />
 
           <div className="flex flex-col justify-center">
             {category ? (
